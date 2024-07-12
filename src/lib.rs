@@ -241,6 +241,8 @@ pub mod prelude {
 #[cfg(test)]
 mod tests {
     use std::str::FromStr;
+    use std::thread::sleep;
+    use std::time::Duration;
     use typeid_prefix::prelude::PrefixFactory;
     use typeid_prefix::TypeIdPrefix;
     use typeid_suffix::prelude::*;
@@ -347,5 +349,30 @@ mod tests {
         );
         assert_eq!(domain_id.uuid_str().unwrap(), "cfbff0d1-9375-5685-968c-48ce8b15ae17");
     }
+
+
+    #[test]
+    fn test_v7_magictypeid_ordering() {
+        let prefix1 = TypeIdPrefix::from_str("user").unwrap();
+        let prefix2 = TypeIdPrefix::from_str("admin").unwrap();
+
+        let id1 = MagicTypeId::new(prefix1.clone(), TypeIdSuffix::new::<V7>());
+        sleep(Duration::from_millis(10));  // Ensure different timestamps
+        let id2 = MagicTypeId::new(prefix1.clone(), TypeIdSuffix::new::<V7>());
+        let id3 = MagicTypeId::new(prefix2, TypeIdSuffix::new::<V7>());
+
+        println!("id1: {}", id1);
+        println!("id2: {}", id2);
+        println!("id3: {}", id3);
+
+        println!("id1 < id2: {}", id1 < id2);
+        println!("id1 < id3: {}", id1 < id3);
+        println!("id2 < id3: {}", id2 < id3);
+
+        assert!(id1 < id2, "Expected id1 to be less than id2 due to earlier timestamp");
+        assert!(id3 < id1, "Expected id3 to be less than id1 due to lexicographically smaller prefix when timestamps are equal");
+        assert!(id3 < id2, "Expected id3 to be less than id2 due to lexicographically smaller prefix when timestamps are equal");
+    }
+
 
 }
