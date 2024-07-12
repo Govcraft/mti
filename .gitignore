@@ -1,0 +1,52 @@
+# Binaries
+/debug
+/target
+release/
+
+# Fuzzing artifacts
+/fuzz/artifacts/
+/fuzz/corpus/
+
+# Property-based testing artifacts
+/prop-tests/artifacts/
+/prop-tests/corpus/
+
+# Kani proofs
+/kani/
+/kani_targets/
+
+# Temporary files
+*.log
+*.tmp
+*.swp
+*.swo
+
+# Rust specific
+**/*.rs.bk
+**/*.rs.swp
+**/*.rs.swo
+
+# IDEs and editors
+/.idea
+.vscode/
+/target/
+/Cargo.lock
+**/*.rs.bk
+**/*.rs.swp
+**/*.rs.swo
+*.rs.bk
+*.rs.swp
+*.rs.swo
+
+# Node specific (for example, if you have a web frontend)
+node_modules/
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+Desktop.ini
+
+# Linux
+*~
