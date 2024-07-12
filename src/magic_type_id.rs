@@ -1,4 +1,5 @@
 use std::borrow::Borrow;
+use std::cmp::Ordering;
 use std::fmt::{Display, Formatter};
 use std::hash::{Hash, Hasher};
 use std::ops::Deref;
@@ -47,6 +48,47 @@ pub struct MagicTypeId {
     prefix: TypeIdPrefix,
     suffix: TypeIdSuffix,
     string_repr: String,
+}
+
+impl Ord for MagicTypeId {
+    fn cmp(&self, other: &Self) -> Ordering {
+        match self.suffix.cmp(&other.suffix) {
+            Ordering::Equal => self.prefix.cmp(&other.prefix),
+            other => other,
+        }
+    }
+}
+
+impl PartialOrd for MagicTypeId {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+// Implement PartialOrd for &str
+impl PartialOrd<str> for MagicTypeId {
+    fn partial_cmp(&self, other: &str) -> Option<Ordering> {
+        self.string_repr.as_str().partial_cmp(other)
+    }
+}
+
+impl PartialOrd<MagicTypeId> for str {
+    fn partial_cmp(&self, other: &MagicTypeId) -> Option<Ordering> {
+        self.partial_cmp(other.string_repr.as_str())
+    }
+}
+
+// Implement PartialOrd for String
+impl PartialOrd<String> for MagicTypeId {
+    fn partial_cmp(&self, other: &String) -> Option<Ordering> {
+        self.string_repr.partial_cmp(other)
+    }
+}
+
+impl PartialOrd<MagicTypeId> for String {
+    fn partial_cmp(&self, other: &MagicTypeId) -> Option<Ordering> {
+        self.partial_cmp(&other.string_repr)
+    }
 }
 
 impl Hash for MagicTypeId {
@@ -220,7 +262,6 @@ impl FromStr for MagicTypeId {
     }
 }
 
-// ... (remaining implementations stay the same)
 impl Deref for MagicTypeId {
     type Target = str;
 
