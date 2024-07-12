@@ -233,7 +233,7 @@ let retrieved_user = db.get::<User>(retrieved_id.to_string());
 
 While this crate is feature-complete and thoroughly tested, it is currently in beta to gather wider community feedback.
 I encourage you to use it in your projects and provide feedback. If you encounter any issues or have suggestions,
-please file them on our [GitHub repository](https://github.com/GovCraft/mti/issues).
+please file them on my [GitHub repository](https://github.com/GovCraft/mti/issues).
 
 ## Contributing
 
