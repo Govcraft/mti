@@ -109,7 +109,34 @@ assert_eq!(magic_id.suffix().to_string(), "01h455vb4pex5vsknk084sn02q");
 let uuid = magic_id.suffix().to_uuid();
 println!("Extracted UUID: {}", uuid);
 ```
+### Sorting
+When `MagicTypeId` is created with a `V7` UUID, it provides a natural sorting order:
+1. **Primary Sorting**: By the timestamp in the `UUIDv7` suffix. This means that identifiers
+   generated later will appear after those generated earlier.
+2. **Secondary Sorting**: If the timestamps are equal, then sorting is based on the lexicographical order
+   of the prefix. This ensures consistent ordering even when identifiers are created at the same time.
+```rust
+use std::str::FromStr;
+use std::thread::sleep;
+use std::time::Duration;
 
+use mti::prelude::*;
+use typeid_prefix::prelude::*;
+use typeid_suffix::prelude::*;
+
+let prefix1 = TypeIdPrefix::from_str("user").unwrap();
+let prefix2 = TypeIdPrefix::from_str("admin").unwrap();
+let id1 = MagicTypeId::new(prefix1.clone(), TypeIdSuffix::new::<V7>());
+
+sleep(Duration::from_millis(10));  // Ensure different timestamps
+
+let id2 = MagicTypeId::new(prefix1.clone(), TypeIdSuffix::new::<V7>());
+let id3 = MagicTypeId::new(prefix2.clone(), TypeIdSuffix::from_str(&id2.suffix().to_string()).unwrap());
+
+assert!(id1 < id2, "Expected id1 to be less than id2 due to earlier timestamp");
+assert_eq!(id2.suffix(), id3.suffix(), "Suffixes for id2 and id3 should be the same");
+assert!(id3 < id2, "Expected id3 to be less than id2 due to lexicographically smaller prefix when timestamps are equal");
+```
 ## Use Cases
 
 MagicTypeId is versatile and can be applied in various scenarios:
