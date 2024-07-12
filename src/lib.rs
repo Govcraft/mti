@@ -187,7 +187,7 @@
 //!
 //! ## Contributing
 //!
-//! We welcome contributions! Please see our [GitHub repository](https://github.com/Govcraft/mti) for issues, feature requests, and pull requests.
+//! We welcome contributions! Please see my [GitHub repository](https://github.com/Govcraft/mti) for issues, feature requests, and pull requests.
 //!
 //! ## License
 //!
