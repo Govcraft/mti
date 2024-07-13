@@ -11,7 +11,7 @@ across your applications.
 
 ## Acknowledgments
 
-This crate implements version 3 of the [TypeID Specification](https://github.com/jetpack-io/typeid) created and
+This crate implements version 0.3.0 of the [TypeID Specification](https://github.com/jetpack-io/typeid) created and
 maintained by [Jetpack](https://www.jetpack.io/). I'm grateful for their work in developing and managing this
 specification.
 
@@ -32,7 +32,7 @@ Add `mti` to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-mti = "1.0.4-beta.1"
+mti = "1.0.5-beta.1"
 ```
 
 Then, in your Rust code:
