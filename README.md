@@ -32,7 +32,7 @@ Add `mti` to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-mti = "1.0.0-beta.1"
+mti = "1.0.4-beta.1"
 ```
 
 Then, in your Rust code:
