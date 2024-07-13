@@ -12,7 +12,7 @@ use typeid_suffix::prelude::*;
 ///
 /// This enum encapsulates errors from both the prefix and suffix components
 /// of a `MagicTypeId`, allowing for more specific error handling.
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum MagicTypeIdError {
     /// Errors related to the `TypeID` prefix.
     ///
