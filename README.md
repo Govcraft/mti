@@ -12,7 +12,7 @@ across your applications.
 ## Acknowledgments
 
 This crate implements version 0.3.0 of the [TypeID Specification](https://github.com/jetpack-io/typeid) created and
-maintained by [Jetpack](https://www.jetpack.io/). I'm grateful for their work in developing and managing this
+maintained by [Jetify](https://www.jetify.io/). I'm grateful for their work in developing and managing this
 specification.
 
 ## Features
