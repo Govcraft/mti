@@ -5,14 +5,14 @@
 [![License: MIT OR Apache-2.0](https://img.shields.io/badge/License-MIT%20OR%20Apache--2.0-blue.svg)](LICENSE)
 
 Welcome to `mti`, a Rust crate that brings the power of type-safe, prefix-enhanced identifiers to your distributed
-systems. Built on the [TypeID Specification](https://github.com/jetpack-io/typeid), `mti` combines the uniqueness of
+systems. Built on the [TypeID Specification](https://github.com/jetify-com/typeid), `mti` combines the uniqueness of
 UUIDs with the readability and type safety of prefixed identifiers, offering a robust solution for managing identifiers
 across your applications.
 
 ## Acknowledgments
 
-This crate implements version 0.3.0 of the [TypeID Specification](https://github.com/jetpack-io/typeid) created and
-maintained by [Jetify](https://www.jetify.io/). I'm grateful for their work in developing and managing this
+This crate implements version 0.3.0 of the [TypeID Specification](https://github.com/jetify-com/typeid) created and
+maintained by [Jetify](https://www.jetify.com/). I'm grateful for their work in developing and managing this
 specification.
 
 ## Features
@@ -24,7 +24,7 @@ specification.
 - **Flexibility**: Support for various UUID versions and custom prefixes.
 - **Ease of Use**: Intuitive API with extension methods for effortless creation and manipulation.
 - **Performance**: Zero-cost abstractions for string-like operations.
-- **Reliability**: Built on thoroughly tested and verified `TypeIdPrefix` and `TypeIdSuffix` crates.
+- **Reliability**: Built on thoroughly tested and verified [TypeIdPrefix](https://crates.io/crates/typeid_prefix) and [TypeIdSuffix](https://crates.io/crates/typeid_suffix) crates.
 
 ## Quick Start
 
