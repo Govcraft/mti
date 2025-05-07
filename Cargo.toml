@@ -1,6 +1,6 @@
 [package]
 name = "mti"
-version = "1.0.7-beta.1"
+version = "1.0.0"
 edition = "2021"
 authors = ["rrrodzilla@proton.me"]
 description = "A Rust library that implements type-safe, prefix-enhanced identifiers based on the TypeID Specification"
@@ -12,12 +12,14 @@ keywords = ["typeid", "uuid", "identifier", "distributed-systems"]
 categories = ["data-structures", "development-tools", "encoding", "parser-implementations", "web-programming"]
 
 [dependencies]
-typeid_prefix = "1.1.1-beta.1"
-typeid_suffix = "1.0.2-beta.1"
+typeid_prefix = {version ="1.0.5", features = ["serde"]}
+typeid_suffix = {version="1.0.2", features = ["serde"]}
+serde = { version = "1.0", features = ["derive"] }
 
 [dev-dependencies]
 uuid = { version = "1.10.0", features = ["v4"] }
 proptest = { version = "1.5.0", features = ["proptest-macro"] }
+serde_json = "1.0"
 
 [features]
 default = []

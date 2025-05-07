@@ -50,3 +50,6 @@ Desktop.ini
 
 # Linux
 *~
+
+# Roo AI specific
+.roo/

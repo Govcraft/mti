@@ -7,6 +7,7 @@ use std::str::FromStr;
 use typeid_prefix::{TypeIdPrefix, ValidationError};
 use typeid_suffix::prelude::*;
 use crate::errors::MagicTypeIdError;
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 /// A type-safe identifier combining a prefix and a UUID-based suffix.
 ///
@@ -236,6 +237,7 @@ impl MagicTypeId {
     /// assert_eq!(type_id.as_str(), "user_01h455vb4pex5vsknk084sn02q");
     /// ```
     #[must_use]
+    #[allow(clippy::missing_const_for_fn)]
     pub fn as_str(&self) -> &str {
         &self.string_repr
     }
@@ -331,5 +333,26 @@ impl PartialEq<&str> for MagicTypeId {
 impl PartialEq<MagicTypeId> for &str {
     fn eq(&self, other: &MagicTypeId) -> bool {
         *self == other.string_repr
+    }
+}
+
+impl Serialize for MagicTypeId {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        // Serialize the MagicTypeId as a string
+        serializer.serialize_str(&self.string_repr)
+    }
+}
+
+impl<'de> Deserialize<'de> for MagicTypeId {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        // Deserialize the string into a MagicTypeId
+        let s = String::deserialize(deserializer)?;
+        MagicTypeId::from_str(&s).map_err(serde::de::Error::custom)
     }
 }

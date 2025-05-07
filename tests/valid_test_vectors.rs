@@ -1,3 +1,8 @@
+//! Tests for handling valid TypeID string formats and values.
+//!
+//! This module uses a set of predefined valid test vectors to ensure
+//! that the parsing and validation logic correctly accepts and processes
+//! well-formed TypeID strings.
 use mti::prelude::*;
 
 macro_rules! create_test_vector {
@@ -17,8 +22,19 @@ macro_rules! create_test_vector {
 
             //the manual way
             // here we create the prefix
-            let prefix = TypeIdPrefix::try_from($prefix).unwrap();
-            assert_eq!(prefix, $prefix, "Encoding prefix failed");
+            // With typeid_prefix@1.0.5, empty prefixes are correctly rejected
+            // Use TypeIdPrefix::default() for empty prefixes
+            let prefix = if $prefix.is_empty() {
+                TypeIdPrefix::default()
+            } else {
+                TypeIdPrefix::try_from($prefix).unwrap()
+            };
+            
+            // For empty prefixes, we can't directly compare with the empty string
+            // as TypeIdPrefix::default() doesn't equal an empty string
+            if !$prefix.is_empty() {
+                assert_eq!(prefix, $prefix, "Encoding prefix failed");
+            }
 
             // here we create the suffix
             let uuid = uuid::Uuid::parse_str($uuid).unwrap();

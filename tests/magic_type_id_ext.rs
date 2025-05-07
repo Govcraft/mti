@@ -1,3 +1,8 @@
+//! Tests for the `MagicTypeIdExt` trait and its implementations.
+//!
+//! This module focuses on verifying the extended functionalities provided
+//! for `MagicTypeId` instances, such as custom formatting or
+//! additional utility methods.
 #[cfg(test)]
 mod tests {
     use mti::prelude::*;

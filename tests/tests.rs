@@ -1,3 +1,7 @@
+//! General integration and core functionality tests for the `mti` crate.
+//!
+//! This module covers various aspects of `MagicTypeId` creation, parsing,
+//! and manipulation, ensuring the fundamental features work as expected.
 use mti::prelude::*;
 use std::collections::HashMap;
 
