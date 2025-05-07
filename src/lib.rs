@@ -1,7 +1,7 @@
 //! # Magic Type ID (MTI): Empowering Distributed Systems with Intelligent Identifiers
 //!
 //! Welcome to `mti`, a Rust crate that brings the power of type-safe, prefix-enhanced identifiers to your distributed systems.
-//! Built on the [TypeID Specification](https://github.com/jetpack-io/typeid), `mti` combines the uniqueness of UUIDs with
+//! Built on the [TypeID Specification](https://github.com/jetpack-io/typeid/blob/main/spec/SPEC.md), `mti` combines the uniqueness of UUIDs with
 //! the readability and type safety of prefixed identifiers, offering a robust solution for managing identifiers across your applications.
 //!
 //! ## Why Magic Type ID?
@@ -22,7 +22,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! mti = "0.1.0"
+//! mti = "1.0"
 //! ```
 //!
 //! Then, in your Rust code:

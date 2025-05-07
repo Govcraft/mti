@@ -11,7 +11,7 @@ use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 /// A type-safe identifier combining a prefix and a UUID-based suffix.
 ///
-/// `MagicTypeId` represents a `TypeID` as specified in [Version 3 of the TypeID](https://github.com/jetify-com/typeid/tree/main/spec) specification.
+/// `MagicTypeId` represents a `TypeID` as specified in the [TypeID Specification](https://github.com/jetpack-io/typeid/blob/main/spec/SPEC.md).
 /// It consists of a [`TypeIdPrefix`] and a [`TypeIdSuffix`], providing a unique,
 /// type-safe identifier that can be used across distributed systems.
 ///

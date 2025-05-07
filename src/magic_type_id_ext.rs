@@ -187,11 +187,12 @@ pub trait MagicTypeIdExt {
     /// # Examples
     ///
     /// ```
-    /// use mti::prelude::*;
+    ///     use mti::prelude::*;
     ///
-    /// let uuid = "user_01h2xcejqg4wh1r27hsdgzeqp4".uuid().unwrap();
-    /// assert_eq!(uuid.get_version_num(), 2); // UUIDv2
-    /// assert_eq!(uuid.to_string(), "0188bac7-4af0-2722-1c08-f1cb61f75ec4", "{}", uuid.to_string() ); // UUIDv2
+    ///     let type_id_str = "user_01h455vb4pex5vsknk084sn02q";
+    ///     let uuid = type_id_str.uuid().unwrap();
+    ///     assert_eq!(uuid.get_version_num(), 7); // UUIDv7
+    ///     assert_eq!(uuid.to_string(), "0188b282-2787-7000-91cd-15f064025c7e");
     /// ```
     fn uuid(&self) -> Result<Uuid, MagicTypeIdError>;
 
@@ -224,8 +225,8 @@ pub trait MagicTypeIdExt {
     /// let sanitized_id = "Invalid Prefix!123".create_type_id::<V4>();
     /// assert!(sanitized_id.to_string().starts_with("invalidprefix_"));
     ///
-    /// let sanitized_id = "  _USER_NAME_  ".create_type_id::<V4>();
-    /// assert!(sanitized_id.to_string().starts_with("user_name_"), "{:?}", sanitized_id.to_string());
+    ///     let sanitized_id = "  _USER_NAME_  ".create_type_id::<V4>();
+    ///     assert!(sanitized_id.to_string().starts_with("user_name_"));
     ///
     /// let sanitized_id = "a".repeat(100).create_type_id::<V4>();
     /// assert_eq!(sanitized_id.prefix().as_str().len(), 63);
