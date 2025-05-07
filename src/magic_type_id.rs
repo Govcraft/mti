@@ -7,6 +7,8 @@ use std::str::FromStr;
 use typeid_prefix::{TypeIdPrefix, ValidationError};
 use typeid_suffix::prelude::*;
 use crate::errors::MagicTypeIdError;
+
+#[cfg(feature = "serde")]
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 /// A type-safe identifier combining a prefix and a UUID-based suffix.
@@ -336,6 +338,7 @@ impl PartialEq<MagicTypeId> for &str {
     }
 }
 
+#[cfg(feature = "serde")]
 impl Serialize for MagicTypeId {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -346,6 +349,7 @@ impl Serialize for MagicTypeId {
     }
 }
 
+#[cfg(feature = "serde")]
 impl<'de> Deserialize<'de> for MagicTypeId {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
@@ -353,6 +357,6 @@ impl<'de> Deserialize<'de> for MagicTypeId {
     {
         // Deserialize the string into a MagicTypeId
         let s = String::deserialize(deserializer)?;
-        MagicTypeId::from_str(&s).map_err(serde::de::Error::custom)
+        Self::from_str(&s).map_err(serde::de::Error::custom)
     }
 }

@@ -3,6 +3,10 @@
 //!
 //! This module verifies that `MagicTypeId` instances can be correctly
 //! serialized to and deserialized from various formats using Serde.
+//!
+//! These tests only run when the "serde" feature is enabled.
+
+#![cfg(feature = "serde")]
 
 use mti::prelude::*;
 use serde_json;

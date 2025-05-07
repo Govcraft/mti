@@ -75,6 +75,16 @@ Add `mti` to your `Cargo.toml`:
 mti = "1.0" # Or the latest version
 ```
 
+**Optional Serde Support:**
+
+If you need to serialize or deserialize `MagicTypeId` instances (e.g., for use with Serde-compatible formats like JSON, YAML, etc.), enable the `serde` feature flag:
+
+```toml
+[dependencies]
+mti = { version = "1.0", features = ["serde"] } # Or the latest version, ensure to match the version above
+```
+This will enable Serde's `Serialize` and `Deserialize` traits for `MagicTypeId`.
+
 Then, in your Rust code:
 
 ```rust
@@ -113,6 +123,9 @@ match MagicTypeId::from_str(order_id_str) {
     *   *Benefit:* Easy to integrate and use, reducing boilerplate code.
 *   **Zero-Cost Abstractions**: Efficient string-like operations without performance overhead.
     *   *Benefit:* Good performance for critical path operations.
+
+*   **Optional Serde Support**: Easily serialize and deserialize `MagicTypeId` instances using Serde by enabling the `serde` feature flag.
+    *   *Benefit:* Seamless integration with common serialization formats like JSON, YAML, TOML, etc., for data interchange and storage.
 
 ## Usage Examples
 
