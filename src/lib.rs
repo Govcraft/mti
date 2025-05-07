@@ -236,6 +236,13 @@ pub mod prelude {
     ///
     /// This trait is implemented for `str`, allowing for easy creation of `MagicTypeId`s from string literals.
     pub use crate::magic_type_id_ext::MagicTypeIdExt;
+    
+    /// Re-exports the `tracing` crate when the "instrument" feature is enabled.
+    ///
+    /// This allows users of this crate to access tracing functionality without having to
+    /// add a direct dependency on the `tracing` crate.
+    #[cfg(feature = "instrument")]
+    pub use tracing;
 }
 
 #[cfg(test)]

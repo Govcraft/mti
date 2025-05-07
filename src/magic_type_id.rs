@@ -11,6 +11,9 @@ use crate::errors::MagicTypeIdError;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
+#[cfg(feature = "instrument")]
+use tracing::{debug, instrument, trace};
+
 /// A type-safe identifier combining a prefix and a UUID-based suffix.
 ///
 /// `MagicTypeId` represents a `TypeID` as specified in the [TypeID Specification](https://github.com/jetpack-io/typeid/blob/main/spec/SPEC.md).
@@ -170,12 +173,19 @@ impl MagicTypeId {
     /// assert!(type_id.to_string().starts_with("user_"));
     /// ```
     #[must_use]
+    #[cfg_attr(feature = "instrument", instrument(level = "debug", skip(prefix, suffix), fields(prefix = %prefix, suffix = %suffix)))]
     pub fn new(prefix: TypeIdPrefix, suffix: TypeIdSuffix) -> Self {
         let string_repr = if prefix.is_empty() {
+            #[cfg(feature = "instrument")]
+            trace!("Creating MagicTypeId with empty prefix");
             suffix.to_string()
         } else {
+            #[cfg(feature = "instrument")]
+            trace!("Creating MagicTypeId with prefix and suffix");
             format!("{prefix}_{suffix}")
         };
+        #[cfg(feature = "instrument")]
+        debug!("Created MagicTypeId: {}", string_repr);
         Self { prefix, suffix, string_repr }
     }
 
@@ -279,16 +289,31 @@ impl FromStr for MagicTypeId {
     ///
     /// assert!(MagicTypeId::from_str("invalid!_01h455vb4pex5vsknk084sn02q").is_err());
     /// ```
+    #[cfg_attr(feature = "instrument", instrument(level = "debug", fields(input = %s)))]
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         if let Some((prefix_str, suffix_str)) = s.rsplit_once('_') {
+            #[cfg(feature = "instrument")]
+            trace!("Parsing MagicTypeId with prefix '{}' and suffix '{}'", prefix_str, suffix_str);
+            
             if prefix_str.is_empty() {
+                #[cfg(feature = "instrument")]
+                debug!("Empty prefix found, returning error");
                 return Err(MagicTypeIdError::Prefix(ValidationError::InvalidStartCharacter));
             }
             let prefix = TypeIdPrefix::from_str(prefix_str)?;
             let suffix = TypeIdSuffix::from_str(suffix_str)?;
+            
+            #[cfg(feature = "instrument")]
+            debug!("Successfully parsed MagicTypeId with prefix and suffix");
             Ok(Self::new(prefix, suffix))
         } else {
+            #[cfg(feature = "instrument")]
+            trace!("Parsing MagicTypeId with no prefix, only suffix '{}'", s);
+            
             let suffix = TypeIdSuffix::from_str(s)?;
+            
+            #[cfg(feature = "instrument")]
+            debug!("Successfully parsed MagicTypeId with no prefix");
             Ok(Self::new(TypeIdPrefix::default(), suffix))
         }
     }

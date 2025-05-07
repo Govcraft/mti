@@ -8,6 +8,9 @@ use std::fmt;
 use typeid_prefix::prelude::*;
 use typeid_suffix::prelude::*;
 
+#[cfg(feature = "instrument")]
+use tracing::{error, instrument};
+
 /// Represents errors that can occur when working with `MagicTypeIds`.
 ///
 /// This enum encapsulates errors from both the prefix and suffix components
@@ -46,13 +49,19 @@ impl std::error::Error for MagicTypeIdError {
 }
 
 impl From<ValidationError> for MagicTypeIdError {
+    #[cfg_attr(feature = "instrument", instrument(level = "error", fields(error = %err)))]
     fn from(err: ValidationError) -> Self {
+        #[cfg(feature = "instrument")]
+        error!("Converting ValidationError to MagicTypeIdError: {}", err);
         Self::Prefix(err)
     }
 }
 
 impl From<DecodeError> for MagicTypeIdError {
+    #[cfg_attr(feature = "instrument", instrument(level = "error", fields(error = %err)))]
     fn from(err: DecodeError) -> Self {
+        #[cfg(feature = "instrument")]
+        error!("Converting DecodeError to MagicTypeIdError: {}", err);
         Self::Suffix(err)
     }
 }

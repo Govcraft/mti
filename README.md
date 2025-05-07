@@ -85,6 +85,54 @@ mti = { version = "1.0", features = ["serde"] } # Or the latest version, ensure 
 ```
 This will enable Serde's `Serialize` and `Deserialize` traits for `MagicTypeId`.
 
+**Optional Tracing Instrumentation:**
+
+For detailed operational insights, `mti` supports instrumentation via the [`tracing`](https://crates.io/crates/tracing) crate. When enabled, `mti` will emit trace events for key operations like ID creation and parsing. This is invaluable for debugging, performance analysis, and understanding the crate's behavior within your application.
+
+To enable this feature, add `instrument` to the `features` list in your `Cargo.toml`:
+
+```toml
+[dependencies]
+mti = { version = "1.0", features = ["instrument"] } # Or your current version
+
+# Your application will also need a tracing subscriber
+tracing = "0.1" # The tracing facade
+tracing-subscriber = { version = "0.3", features = ["fmt"] } # Example subscriber
+```
+
+**How it Works:**
+
+When the `instrument` feature is active, `mti` functions are annotated with `#[instrument(...)]` and contain `trace!`, `debug!`, etc., calls from the `tracing` crate. Your application can then configure a `tracing` subscriber (like `tracing-subscriber`) to collect, filter, format, and output these trace events. This gives you control over the level of detail and destination of the trace data (e.g., console, file, or a distributed tracing system).
+
+*Example of setting up a basic subscriber in your application:*
+
+```rust
+// In your application's main.rs or initialization code:
+use tracing_subscriber::fmt::format::FmtSpan;
+use mti::prelude::*; // For create_type_id and MagicTypeId
+
+fn setup_tracing() {
+    tracing_subscriber::fmt()
+        .with_max_level(tracing::Level::DEBUG) // Adjust level as needed (TRACE, DEBUG, INFO, etc.)
+        .with_span_events(FmtSpan::CLOSE)      // Configure span event reporting
+        .init();                               // Initialize the global subscriber
+}
+
+fn main() {
+    setup_tracing(); // Call this early in your application
+
+    // Operations in mti will now emit traces if the "instrument" feature is enabled
+    let product_id = "product".create_type_id::<V7>(); // This will be traced
+    println!("Product ID: {}", product_id);
+
+    match MagicTypeId::from_str("test_01h2xcejqg4wh1r27hsdgzeqp4") { // This parsing will be traced
+        Ok(id) => println!("Parsed ID: {}", id),
+        Err(e) => eprintln!("Error parsing ID: {}", e),
+    }
+}
+```
+This setup allows the host application to effectively leverage the instrumentation within `mti`.
+
 Then, in your Rust code:
 
 ```rust
@@ -126,6 +174,9 @@ match MagicTypeId::from_str(order_id_str) {
 
 *   **Optional Serde Support**: Easily serialize and deserialize `MagicTypeId` instances using Serde by enabling the `serde` feature flag.
     *   *Benefit:* Seamless integration with common serialization formats like JSON, YAML, TOML, etc., for data interchange and storage.
+
+*   **Optional Tracing Instrumentation**: Enables detailed operational tracing using the `tracing` crate when the `instrument` feature is active.
+    *   *Benefit:* Provides deep insights into the crate's internal workings for debugging and performance analysis, configurable by the host application's `tracing` subscriber.
 
 ## Usage Examples
 
@@ -394,10 +445,10 @@ impl UserId {
     }
 
     // Optional: Implement FromStr for UserId
-    fn from_str_validated(s: &str) -> Result<Self, MTIError> {
+    fn from_str_validated(s: &str) -> Result<Self, MagicTypeIdError> { // Corrected MTIError to MagicTypeIdError
         let mti = MagicTypeId::from_str(s)?;
         if mti.prefix_str() != "user" {
-            Err(MTIError::Validation("Invalid prefix for UserId, expected 'user'".to_string()))
+            Err(MagicTypeIdError::Validation("Invalid prefix for UserId, expected 'user'".to_string()))
         } else {
             Ok(UserId(mti))
         }

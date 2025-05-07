@@ -6,6 +6,9 @@ use typeid_suffix::prelude::*;
 use crate::errors::MagicTypeIdError;
 use crate::magic_type_id::MagicTypeId;
 
+#[cfg(feature = "instrument")]
+use tracing::{debug, instrument, trace, warn};
+
 /// Extends string-like types with `TypeID` functionality.
 ///
 /// This trait provides methods to parse, validate, and create `TypeIDs` and their components.
@@ -333,59 +336,176 @@ pub trait MagicTypeIdExt {
 }
 
 impl MagicTypeIdExt for str {
+    #[cfg_attr(feature = "instrument", instrument(level = "debug", skip(self), fields(input = %self)))]
     fn prefix_str(&self) -> Result<String, MagicTypeIdError> {
-        self.prefix().map(|p| p.to_string())
+        #[cfg(feature = "instrument")]
+        trace!("Extracting prefix string from TypeID");
+        let result = self.prefix().map(|p| p.to_string());
+        
+        #[cfg(feature = "instrument")]
+        match &result {
+            Ok(prefix) => debug!("Successfully extracted prefix: '{}'", prefix),
+            Err(err) => warn!("Failed to extract prefix: {}", err),
+        }
+        
+        result
     }
 
+    #[cfg_attr(feature = "instrument", instrument(level = "debug", skip(self), fields(input = %self)))]
     fn suffix_str(&self) -> Result<String, MagicTypeIdError> {
-        self.suffix().map(|s| s.to_string())
+        #[cfg(feature = "instrument")]
+        trace!("Extracting suffix string from TypeID");
+        let result = self.suffix().map(|s| s.to_string());
+        
+        #[cfg(feature = "instrument")]
+        match &result {
+            Ok(suffix) => debug!("Successfully extracted suffix: '{}'", suffix),
+            Err(err) => warn!("Failed to extract suffix: {}", err),
+        }
+        
+        result
     }
 
+    #[cfg_attr(feature = "instrument", instrument(level = "debug", skip(self), fields(input = %self)))]
     fn uuid_str(&self) -> Result<String, MagicTypeIdError> {
-        self.uuid().map(|u| u.to_string())
+        #[cfg(feature = "instrument")]
+        trace!("Extracting UUID string from TypeID");
+        let result = self.uuid().map(|u| u.to_string());
+        
+        #[cfg(feature = "instrument")]
+        match &result {
+            Ok(uuid) => debug!("Successfully extracted UUID: '{}'", uuid),
+            Err(err) => warn!("Failed to extract UUID: {}", err),
+        }
+        
+        result
     }
 
+    #[cfg_attr(feature = "instrument", instrument(level = "debug", skip(self), fields(input = %self)))]
     fn prefix(&self) -> Result<TypeIdPrefix, MagicTypeIdError> {
+        #[cfg(feature = "instrument")]
+        trace!("Extracting TypeIdPrefix from TypeID");
+        
         if self.is_empty() {
+            #[cfg(feature = "instrument")]
+            debug!("Input is empty, returning default TypeIdPrefix");
             return Ok(TypeIdPrefix::default());
         }
-        match self.rsplit_once('_') {
-            Some((prefix, _)) => TypeIdPrefix::try_from(prefix).map_err(MagicTypeIdError::Prefix),
-            None => Ok(TypeIdPrefix::default()),
+        
+        if let Some((prefix, _)) = self.rsplit_once('_') {
+            #[cfg(feature = "instrument")]
+            trace!("Found prefix part: '{}'", prefix);
+            let result = TypeIdPrefix::try_from(prefix).map_err(MagicTypeIdError::Prefix);
+            
+            #[cfg(feature = "instrument")]
+            match &result {
+                Ok(prefix) => debug!("Successfully created TypeIdPrefix: '{}'", prefix),
+                Err(err) => warn!("Failed to create TypeIdPrefix: {}", err),
+            }
+            
+            result
+        } else {
+            #[cfg(feature = "instrument")]
+            debug!("No prefix separator found, returning default TypeIdPrefix");
+            Ok(TypeIdPrefix::default())
         }
     }
 
+    #[cfg_attr(feature = "instrument", instrument(level = "debug", skip(self), fields(input = %self)))]
     fn suffix(&self) -> Result<TypeIdSuffix, MagicTypeIdError> {
+        #[cfg(feature = "instrument")]
+        trace!("Extracting TypeIdSuffix from TypeID");
+        
         if self.is_empty() {
+            #[cfg(feature = "instrument")]
+            warn!("Input is empty, returning InvalidSuffix error");
             return Err(MagicTypeIdError::Suffix(DecodeError::InvalidSuffix(InvalidSuffixReason::InvalidLength)));
         }
+        
         let suffix_str = self.rsplit_once('_').map_or(self, |(_, suffix)| suffix);
-        TypeIdSuffix::from_str(suffix_str).map_err(MagicTypeIdError::Suffix)
+        #[cfg(feature = "instrument")]
+        trace!("Found suffix part: '{}'", suffix_str);
+        
+        let result = TypeIdSuffix::from_str(suffix_str).map_err(MagicTypeIdError::Suffix);
+        
+        #[cfg(feature = "instrument")]
+        match &result {
+            Ok(suffix) => debug!("Successfully created TypeIdSuffix: '{}'", suffix),
+            Err(err) => warn!("Failed to create TypeIdSuffix: {}", err),
+        }
+        
+        result
     }
 
+    #[cfg_attr(feature = "instrument", instrument(level = "debug", skip(self), fields(input = %self)))]
     fn uuid(&self) -> Result<Uuid, MagicTypeIdError> {
-        self.suffix().map(|s| s.to_uuid())
+        #[cfg(feature = "instrument")]
+        trace!("Extracting UUID from TypeID");
+        
+        let result = self.suffix().map(|s| s.to_uuid());
+        
+        #[cfg(feature = "instrument")]
+        match &result {
+            Ok(uuid) => debug!("Successfully extracted UUID: '{}'", uuid),
+            Err(err) => warn!("Failed to extract UUID: {}", err),
+        }
+        
+        result
     }
 
+    #[cfg_attr(feature = "instrument", instrument(level = "debug", skip(self), fields(input = %self, uuid_version = std::any::type_name::<V>())))]
     fn create_type_id<V: UuidVersion + Default>(&self) -> MagicTypeId {
+        #[cfg(feature = "instrument")]
+        trace!("Creating MagicTypeId with sanitized prefix");
+        
         let prefix = self.create_prefix_sanitized();
+        #[cfg(feature = "instrument")]
+        debug!("Sanitized prefix: '{}'", prefix);
+        
         let suffix = TypeIdSuffix::new::<V>();
+        #[cfg(feature = "instrument")]
+        debug!("Created new TypeIdSuffix: '{}'", suffix);
+        
         MagicTypeId::new(prefix, suffix)
     }
 
+    #[cfg_attr(feature = "instrument", instrument(level = "debug", skip(self, suffix), fields(input = %self, suffix = %suffix)))]
     fn create_type_id_with_suffix<V: UuidVersion + Default>(&self, suffix: TypeIdSuffix) -> MagicTypeId {
+        #[cfg(feature = "instrument")]
+        trace!("Creating MagicTypeId with sanitized prefix and provided suffix");
+        
         let prefix = self.create_prefix_sanitized();
+        #[cfg(feature = "instrument")]
+        debug!("Sanitized prefix: '{}'", prefix);
+        
         MagicTypeId::new(prefix, suffix)
     }
 
+    #[cfg_attr(feature = "instrument", instrument(level = "debug", skip(self), fields(input = %self, uuid_version = std::any::type_name::<V>())))]
     fn try_create_type_id<V: UuidVersion + Default>(&self) -> Result<MagicTypeId, MagicTypeIdError> {
+        #[cfg(feature = "instrument")]
+        trace!("Attempting to create MagicTypeId with validated prefix");
+        
         let prefix = TypeIdPrefix::try_from(self)?;
+        #[cfg(feature = "instrument")]
+        debug!("Successfully validated prefix: '{}'", prefix);
+        
         let suffix = TypeIdSuffix::new::<V>();
+        #[cfg(feature = "instrument")]
+        debug!("Created new TypeIdSuffix: '{}'", suffix);
+        
         Ok(MagicTypeId::new(prefix, suffix))
     }
 
+    #[cfg_attr(feature = "instrument", instrument(level = "debug", skip(self, suffix), fields(input = %self, suffix = %suffix)))]
     fn try_create_type_id_with_suffix<V: UuidVersion + Default>(&self, suffix: TypeIdSuffix) -> Result<MagicTypeId, MagicTypeIdError> {
+        #[cfg(feature = "instrument")]
+        trace!("Attempting to create MagicTypeId with validated prefix and provided suffix");
+        
         let prefix = TypeIdPrefix::try_from(self)?;
+        #[cfg(feature = "instrument")]
+        debug!("Successfully validated prefix: '{}'", prefix);
+        
         Ok(MagicTypeId::new(prefix, suffix))
     }
 }
