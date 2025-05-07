@@ -192,7 +192,7 @@ pub trait MagicTypeIdExt {
     ///     let type_id_str = "user_01h455vb4pex5vsknk084sn02q";
     ///     let uuid = type_id_str.uuid().unwrap();
     ///     assert_eq!(uuid.get_version_num(), 7); // UUIDv7
-    ///     assert_eq!(uuid.to_string(), "0188b282-2787-7000-91cd-15f064025c7e");
+    ///     assert_eq!(uuid.to_string(), "01890a5d-ac96-774b-bcce-b302099a8057");
     /// ```
     fn uuid(&self) -> Result<Uuid, MagicTypeIdError>;
 
