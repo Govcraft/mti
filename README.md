@@ -519,3 +519,8 @@ at your option.
 I'm [@rrrodzilla](https://github.com/rrrodzilla), a technologist with industry experience, including roles as an SOA and cloud architect, and Principal Technical Product Manager at AWS for the Rust Programming Language. Currently, I'm the owner and operator of Govcraft, building and consulting on Rust and AI solutions.
 
 For more information, visit [https://www.govcraft.ai](https://www.govcraft.ai)
+## Sponsor
+
+Govcraft is a one-person shop—no corporate backing, no investors, just me building useful tools. If this project helps you, [sponsoring](https://github.com/sponsors/Govcraft) keeps the work going.
+
+[![Sponsor on GitHub](https://img.shields.io/badge/Sponsor-%E2%9D%A4-%23db61a2?logo=GitHub)](https://github.com/sponsors/Govcraft)
