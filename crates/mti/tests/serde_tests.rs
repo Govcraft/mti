@@ -9,7 +9,6 @@
 #![cfg(feature = "serde")]
 
 use mti::prelude::*;
-use serde_json;
 use std::str::FromStr;
 
 #[test]

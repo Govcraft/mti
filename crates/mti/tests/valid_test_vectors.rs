@@ -1,8 +1,8 @@
-//! Tests for handling valid TypeID string formats and values.
+//! Tests for handling valid `TypeID` string formats and values.
 //!
 //! This module uses a set of predefined valid test vectors to ensure
 //! that the parsing and validation logic correctly accepts and processes
-//! well-formed TypeID strings.
+//! well-formed `TypeID` strings.
 use mti::prelude::*;
 
 macro_rules! create_test_vector {

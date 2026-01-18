@@ -1,8 +1,8 @@
-//! Tests for handling invalid TypeID string formats and values.
+//! Tests for handling invalid `TypeID` string formats and values.
 //!
 //! This module uses a set of predefined invalid test vectors to ensure
 //! that the parsing and validation logic correctly rejects malformed
-//! or otherwise incorrect TypeID strings.
+//! or otherwise incorrect `TypeID` strings.
 use mti::prelude::*;
 use std::str::FromStr;
 macro_rules! create_test_vector {

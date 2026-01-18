@@ -1,0 +1,37 @@
+[package]
+name = "typeid_suffix"
+version = "1.2.0"
+edition.workspace = true
+authors.workspace = true
+description = "A Rust library that implements the UUID suffix part of the `TypeId` Specification"
+license.workspace = true
+repository.workspace = true
+documentation = "https://docs.rs/typeid_suffix"
+readme = "README.md"
+keywords = ["typeid", "suffix", "uuid", "base32", "encoding"]
+categories = ["encoding", "data-structures"]
+
+[features]
+default = []
+instrument = ["dep:tracing"]
+serde = ["dep:serde"]
+
+[dependencies]
+uuid = { workspace = true }
+tracing = { workspace = true, optional = true }
+serde = { workspace = true, optional = true }
+
+[dev-dependencies]
+proptest = { workspace = true }
+arbitrary = { workspace = true }
+uuid = { workspace = true, features = ["arbitrary", "v8"] }
+rstest = { workspace = true }
+rstest_reuse = { workspace = true }
+serde_json = { workspace = true }
+
+[lints]
+workspace = true
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]

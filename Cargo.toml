@@ -1,33 +1,39 @@
-[package]
-name = "mti"
-version = "1.0.0"
+[workspace]
+resolver = "2"
+members = [
+    "crates/mti",
+    "crates/typeid-prefix",
+    "crates/typeid-suffix",
+]
+
+# Shared workspace settings
+[workspace.package]
 edition = "2021"
 authors = ["rrrodzilla@proton.me"]
-description = "Generates human-readable, prefixed, and globally unique identifiers (based on the TypeID spec) for Rust. Improves clarity, type-safety, debugging, and identifier management in your applications."
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/GovCraft/mti"
-documentation = "https://docs.rs/mti"
-readme = "README.md"
-keywords = ["typeid", "uuid", "identifier", "distributed-systems"]
-categories = ["data-structures", "development-tools", "encoding", "parser-implementations", "web-programming"]
 
-[dependencies]
-typeid_prefix = {version ="1.0.5"}
-typeid_suffix = {version="1.0.2"}
-serde = { version = "1.0", features = ["derive"], optional = true }
-tracing = { version = "0.1", optional = true }
+# Shared dependencies - use workspace = true in member crates
+[workspace.dependencies]
+# Internal workspace crates
+typeid_prefix = { path = "crates/typeid-prefix" }
+typeid_suffix = { path = "crates/typeid-suffix" }
 
-[dev-dependencies]
-uuid = { version = "1.10.0", features = ["v4"] }
+# External dependencies
+uuid = { version = "1.10", features = ["v1", "v3", "v4", "v5", "v6", "v7"] }
+serde = { version = "1.0", features = ["derive"] }
+tracing = { version = "0.1" }
+arbitrary = { version = "1.3.2", features = ["derive"] }
+
+# Dev dependencies
 proptest = { version = "1.5.0", features = ["proptest-macro"] }
 serde_json = "1.0"
+rstest = "0.21.0"
+rstest_reuse = "0.7.0"
 
-[features]
-default = []
-instrument = ["dep:tracing", "typeid_prefix/instrument", "typeid_suffix/instrument"]
-serde = ["dep:serde", "typeid_prefix/serde", "typeid_suffix/serde"]
-
-[lints.rust]
+# Shared lints configuration
+[workspace.lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(kani)'] }
 unsafe_code = "deny"
 missing_docs = "deny"
 missing_debug_implementations = "warn"
@@ -38,7 +44,7 @@ unused_import_braces = "warn"
 unused_qualifications = "warn"
 unused_results = "warn"
 
-[lints.clippy]
+[workspace.lints.clippy]
 pedantic = { level = "warn", priority = -1 }
 nursery = { level = "warn", priority = -1 }
 module_name_repetitions = "allow"
@@ -46,7 +52,3 @@ missing_errors_doc = "warn"
 missing_panics_doc = "warn"
 must_use_candidate = "warn"
 cargo_common_metadata = "warn"
-
-[package.metadata.docs.rs]
-all-features = true
-rustdoc-args = ["--cfg", "docsrs"]

@@ -1,11 +1,36 @@
-# Hidden files and directories (except .gitignore)
+# Hidden files and directories (except .gitignore and .github)
 .*
 !.gitignore
+!.github
 
 # Text and markdown files (except README.md)
 *.txt
 *.md
 !README.md
+!**/README.md
 
-# Rust
-target/
+# Rust / Cargo
+/target/
+**/target/
+Cargo.lock
+**/*.rs.bk
+
+# Fuzzing artifacts
+**/fuzz/artifacts/
+**/fuzz/corpus/
+
+# Property-based testing
+**/proptest-regressions/
+
+# Editor and IDE
+*.swp
+*.swo
+*~
+
+# OS-specific
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.log
+*.tmp

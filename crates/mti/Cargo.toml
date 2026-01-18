@@ -1,0 +1,35 @@
+[package]
+name = "mti"
+version = "1.0.0"
+edition.workspace = true
+authors.workspace = true
+description = "Generates human-readable, prefixed, and globally unique identifiers (based on the TypeID spec) for Rust. Improves clarity, type-safety, debugging, and identifier management in your applications."
+license.workspace = true
+repository.workspace = true
+documentation = "https://docs.rs/mti"
+readme = "README.md"
+keywords = ["typeid", "uuid", "identifier", "distributed-systems"]
+categories = ["data-structures", "development-tools", "encoding", "parser-implementations", "web-programming"]
+
+[dependencies]
+typeid_prefix = { workspace = true }
+typeid_suffix = { workspace = true }
+serde = { workspace = true, optional = true }
+tracing = { workspace = true, optional = true }
+
+[dev-dependencies]
+uuid = { workspace = true, features = ["v4"] }
+proptest = { workspace = true }
+serde_json = { workspace = true }
+
+[features]
+default = []
+instrument = ["dep:tracing", "typeid_prefix/instrument", "typeid_suffix/instrument"]
+serde = ["dep:serde", "typeid_prefix/serde", "typeid_suffix/serde"]
+
+[lints]
+workspace = true
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]

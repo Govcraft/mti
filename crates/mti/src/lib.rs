@@ -181,8 +181,8 @@
 //!
 //! ## Learn More
 //!
-//! - Explore the [`MagicTypeId`] struct for core functionality.
-//! - Check out the [`MagicTypeIdExt`] trait for powerful string extension methods.
+//! - Explore the [`magic_type_id::MagicTypeId`] struct for core functionality.
+//! - Check out the [`magic_type_id_ext::MagicTypeIdExt`] trait for powerful string extension methods.
 //! - See the `errors` module for comprehensive error handling.
 //!
 //! ## Contributing
@@ -345,7 +345,7 @@ mod tests {
 
         // Extract UUID
         let uuid = magic_id.suffix().to_uuid();
-        println!("Extracted UUID: {}", uuid);
+        println!("Extracted UUID: {uuid}");
 
         let namespace = Uuid::parse_str("6ba7b810-9dad-11d1-80b4-00c04fd430c8").unwrap();
         let name = "example.com";
@@ -357,56 +357,52 @@ mod tests {
         assert_eq!(domain_id.uuid_str().unwrap(), "cfbff0d1-9375-5685-968c-48ce8b15ae17");
     }
 
-    #[cfg(test)]
-    mod tests {
-        use super::*;
+    #[test]
+    fn test_ordering() {
         use std::thread::sleep;
         use std::time::Duration;
 
-        #[test]
-        fn test_ordering() {
-            let prefix1 = TypeIdPrefix::from_str("user").unwrap();
-            let prefix2 = TypeIdPrefix::from_str("admin").unwrap();
+        let prefix1 = TypeIdPrefix::from_str("user").unwrap();
+        let prefix2 = TypeIdPrefix::from_str("admin").unwrap();
 
-            // Create id1 with an earlier timestamp
-            let id1 = MagicTypeId::new(prefix1.clone(), TypeIdSuffix::new::<V7>());
-            sleep(Duration::from_millis(10));  // Ensure different timestamps
+        // Create id1 with an earlier timestamp
+        let id1 = MagicTypeId::new(prefix1.clone(), TypeIdSuffix::new::<V7>());
+        sleep(Duration::from_millis(10));  // Ensure different timestamps
 
-            // Create id2 with a later timestamp
-            let id2 = MagicTypeId::new(prefix1.clone(), TypeIdSuffix::new::<V7>());
+        // Create id2 with a later timestamp
+        let id2 = MagicTypeId::new(prefix1, TypeIdSuffix::new::<V7>());
 
-            // Create id3 with the same timestamp as id2 but different prefix
-            let id3 = MagicTypeId::new(prefix2.clone(), TypeIdSuffix::from_str(&id2.suffix().to_string()).unwrap());
+        // Create id3 with the same timestamp as id2 but different prefix
+        let id3 = MagicTypeId::new(prefix2, TypeIdSuffix::from_str(id2.suffix().as_ref()).unwrap());
 
-            println!("id1: {}", id1);
-            println!("id2: {}", id2);
-            println!("id3: {}", id3);
+        println!("id1: {id1}");
+        println!("id2: {id2}");
+        println!("id3: {id3}");
 
-            // Print suffix values for debugging
-            println!("Suffix id1: {}", id1.suffix());
-            println!("Suffix id2: {}", id2.suffix());
-            println!("Suffix id3: {}", id3.suffix());
+        // Print suffix values for debugging
+        println!("Suffix id1: {}", id1.suffix());
+        println!("Suffix id2: {}", id2.suffix());
+        println!("Suffix id3: {}", id3.suffix());
 
-            // Perform the comparisons with detailed debugging
-            let id1_vs_id2 = id1.cmp(&id2);
-            println!("id1 vs id2: {:?}", id1_vs_id2);
-            let id3_vs_id1 = id3.cmp(&id1);
-            println!("id3 vs id1: {:?}", id3_vs_id1);
-            let id3_vs_id2 = id3.cmp(&id2);
-            println!("id3 vs id2: {:?}", id3_vs_id2);
+        // Perform the comparisons with detailed debugging
+        let id1_vs_id2 = id1.cmp(&id2);
+        println!("id1 vs id2: {id1_vs_id2:?}");
+        let id3_vs_id1 = id3.cmp(&id1);
+        println!("id3 vs id1: {id3_vs_id1:?}");
+        let id3_vs_id2 = id3.cmp(&id2);
+        println!("id3 vs id2: {id3_vs_id2:?}");
 
-            // Check primary ordering by timestamp
-            assert!(id1 < id2, "Expected id1 to be less than id2 due to earlier timestamp");
+        // Check primary ordering by timestamp
+        assert!(id1 < id2, "Expected id1 to be less than id2 due to earlier timestamp");
 
-            // Check that id3 and id2 have the same suffix
-            assert_eq!(id2.suffix(), id3.suffix(), "Suffixes for id2 and id3 should be the same");
+        // Check that id3 and id2 have the same suffix
+        assert_eq!(id2.suffix(), id3.suffix(), "Suffixes for id2 and id3 should be the same");
 
-            // Check secondary ordering by prefix when timestamps are equal
-            assert!(id3 < id2, "Expected id3 to be less than id2 due to lexicographically smaller prefix when timestamps are equal");
+        // Check secondary ordering by prefix when timestamps are equal
+        assert!(id3 < id2, "Expected id3 to be less than id2 due to lexicographically smaller prefix when timestamps are equal");
 
-            // We should not expect id3 to be less than id1 because id1 has an earlier timestamp
-            // assert!(id3 < id1, "Expected id3 to be less than id1 due to lexicographically smaller prefix when timestamps are equal");
-        }
+        // We should not expect id3 to be less than id1 because id1 has an earlier timestamp
+        // assert!(id3 < id1, "Expected id3 to be less than id1 due to lexicographically smaller prefix when timestamps are equal");
     }
 
     #[test]
@@ -419,17 +415,17 @@ mod tests {
         let id2 = MagicTypeId::new(prefix1.clone(), TypeIdSuffix::new::<V7>());
         let id3 = MagicTypeId::new(prefix2.clone(), TypeIdSuffix::new::<V7>());
 
-        println!("id1: {}", id1);
-        println!("id2: {}", id2);
-        println!("id3: {}", id3);
+        println!("id1: {id1}");
+        println!("id2: {id2}");
+        println!("id3: {id3}");
 
         // Test ordering by suffix (timestamp) first
         assert!(id1 < id2, "Expected id1 to be less than id2 due to earlier timestamp");
 
         // Test ordering by prefix when timestamps are equal
         let same_timestamp_suffix = id1.suffix().clone();
-        let id4 = MagicTypeId::new(prefix2.clone(), same_timestamp_suffix.clone());
-        let id5 = MagicTypeId::new(prefix1.clone(), same_timestamp_suffix);
+        let id4 = MagicTypeId::new(prefix2, same_timestamp_suffix.clone());
+        let id5 = MagicTypeId::new(prefix1, same_timestamp_suffix);
 
         assert!(id4 < id5, "Expected id4 (admin) to be less than id5 (user) due to lexicographically smaller prefix when timestamps are equal");
     }

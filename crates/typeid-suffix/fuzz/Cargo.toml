@@ -1,0 +1,30 @@
+[package]
+name = "typeid_suffix-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2021"
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+uuid = { version = "1.10.0", features = ["arbitrary", "v1", "v3", "v4", "v5", "v6", "v7", "v8"] }
+
+[dependencies.typeid_suffix]
+path = ".."
+
+[[bin]]
+name = "fuzz_target_1"
+path = "fuzz_targets/fuzz_target_1.rs"
+test = false
+doc = false
+bench = false
+
+[dev-dependencies]
+proc-macro2 = "1.0.86"
+quote = "1.0.36"
+serde = "1.0.204"
+serde_json = "1.0.120"
+syn = "2.0.70"
+uuid = { version = "1.10.0", features = ["arbitrary", "v1", "v3", "v4", "v5", "v6", "v7", "v8"] }

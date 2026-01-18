@@ -21,7 +21,7 @@ use tracing::{debug, instrument, trace};
 /// type-safe identifier that can be used across distributed systems.
 ///
 /// [`TypeIdPrefix`]: typeid_prefix::TypeIdPrefix
-/// [`TypeIdSuffix`]: typeid_suffix::TypeIdSuffix
+/// [`TypeIdSuffix`]: crate::prelude::TypeIdSuffix
 ///
 /// # Examples
 ///
@@ -152,7 +152,7 @@ impl MagicTypeId {
     /// * `suffix` - A [`TypeIdSuffix`] containing the UUID information.
     ///
     /// [`TypeIdPrefix`]: typeid_prefix::TypeIdPrefix
-    /// [`TypeIdSuffix`]: typeid_suffix::TypeIdSuffix
+    /// [`TypeIdSuffix`]: crate::prelude::TypeIdSuffix
     ///
     /// # Returns
     ///
@@ -217,7 +217,7 @@ impl MagicTypeId {
     ///
     /// A reference to the [`TypeIdSuffix`].
     ///
-    /// [`TypeIdSuffix`]: typeid_suffix::TypeIdSuffix
+    /// [`TypeIdSuffix`]: crate::prelude::TypeIdSuffix
     ///
     /// # Examples
     ///
@@ -276,7 +276,7 @@ impl FromStr for MagicTypeId {
     /// - The suffix is not a valid base32-encoded UUID according to the [`TypeIdSuffix`] specification.
     ///
     /// [`TypeIdPrefix`]: TypeIdPrefix
-    /// [`TypeIdSuffix`]: typeid_suffix::TypeIdSuffix
+    /// [`TypeIdSuffix`]: crate::prelude::TypeIdSuffix
     ///
     /// # Examples
     ///

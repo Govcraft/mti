@@ -5,6 +5,14 @@
 use mti::prelude::*;
 use std::collections::HashMap;
 
+fn takes_str(s: &str) {
+    assert!(s.starts_with("user_"));
+}
+
+fn takes_as_ref<T: AsRef<str>>(s: T) {
+    assert!(s.as_ref().starts_with("user_"));
+}
+
 #[test]
 fn test_magic_typeid_capabilities() {
     // Create a `MagicTypeId`
@@ -35,15 +43,9 @@ fn test_magic_typeid_capabilities() {
     assert!(upper.starts_with("USER_"));
 
     // Test Deref coercion
-    fn takes_str(s: &str) {
-        assert!(s.starts_with("user_"));
-    }
     takes_str(&magic_id);
 
     // Test AsRef<str>
-    fn takes_as_ref<T: AsRef<str>>(s: T) {
-        assert!(s.as_ref().starts_with("user_"));
-    }
     takes_as_ref(&magic_id);
 
     // Test Borrow<str>
@@ -61,7 +63,7 @@ fn test_magic_typeid_capabilities() {
 
     // Test with no prefix
     let no_prefix_id = MagicTypeId::new(TypeIdPrefix::default(), TypeIdSuffix::new::<V4>());
-    assert!(!no_prefix_id.contains("_"));
+    assert!(!no_prefix_id.contains('_'));
     assert_eq!(no_prefix_id.len(), 26);
 
     // Test PartialEq implementations
