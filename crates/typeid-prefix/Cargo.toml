@@ -1,6 +1,6 @@
 [package]
 name = "typeid_prefix"
-version = "1.0.5"
+version = "1.2.0"
 edition.workspace = true
 authors.workspace = true
 description = "A Rust library that implements a type-safe version of the TypePrefix section of the `TypeID` Specification"
