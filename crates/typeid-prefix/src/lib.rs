@@ -50,7 +50,6 @@
 //! When the `instrument` feature is enabled, the crate will log validation errors
 //! using the `tracing` crate.
 
-
 pub use type_id_prefix::TypeIdPrefix;
 
 pub use crate::error::ValidationError;
@@ -69,8 +68,8 @@ pub mod prelude {
     //! ```
     //! use typeid_prefix::prelude::*;
     //! ```
-    pub use crate::{TypeIdPrefix, ValidationError};
     pub use crate::traits::{PrefixFactory, Validate};
+    pub use crate::{TypeIdPrefix, ValidationError};
 }
 
 #[cfg(test)]
@@ -84,7 +83,9 @@ mod tests {
     #[test]
     fn test_type_id_spaces_sanitize() {
         assert_eq!(
-            "Invalid String with Spaces!!__".create_prefix_sanitized().as_str(),
+            "Invalid String with Spaces!!__"
+                .create_prefix_sanitized()
+                .as_str(),
             "invalidstringwithspaces"
         );
     }
@@ -92,7 +93,9 @@ mod tests {
     #[test]
     fn test_type_id_truncation() {
         assert_eq!(
-            "A_valid_string_that_is_way_too_long_and_should_be_truncated_to_63_chars".create_prefix_sanitized().as_str(),
+            "A_valid_string_that_is_way_too_long_and_should_be_truncated_to_63_chars"
+                .create_prefix_sanitized()
+                .as_str(),
             "a_valid_string_that_is_way_too_long_and_should_be_truncated_to"
         );
     }
@@ -100,7 +103,9 @@ mod tests {
     #[test]
     fn test_type_id_underscores_sanitize() {
         assert_eq!(
-            "_underscores__everywhere__".create_prefix_sanitized().as_str(),
+            "_underscores__everywhere__"
+                .create_prefix_sanitized()
+                .as_str(),
             "underscores__everywhere"
         );
     }
@@ -109,7 +114,10 @@ mod tests {
     fn test_typeid_prefix_non_ascii() {
         assert!(TypeIdPrefix::try_from("🌀").is_err());
         let sanitized_input = "🌀".create_prefix_sanitized();
-        assert!(sanitized_input.as_str().is_empty(), "Prefix was not empty: {sanitized_input}");
+        assert!(
+            sanitized_input.as_str().is_empty(),
+            "Prefix was not empty: {sanitized_input}"
+        );
     }
 
     #[test]
@@ -154,7 +162,10 @@ mod tests {
             TypeIdPrefix::try_from("InvalidString").unwrap_err(),
             ValidationError::InvalidStartCharacter
         );
-        assert_eq!("InvalidString".create_prefix_sanitized().as_str(), "invalidstring");
+        assert_eq!(
+            "InvalidString".create_prefix_sanitized().as_str(),
+            "invalidstring"
+        );
     }
 
     #[test]
@@ -181,7 +192,12 @@ mod tests {
             TypeIdPrefix::try_from("invalid string with spaces").unwrap_err(),
             ValidationError::ContainsInvalidCharacters
         );
-        assert_eq!("invalid string with spaces".create_prefix_sanitized().as_str(), "invalidstringwithspaces");
+        assert_eq!(
+            "invalid string with spaces"
+                .create_prefix_sanitized()
+                .as_str(),
+            "invalidstringwithspaces"
+        );
     }
 
     #[test]
@@ -206,7 +222,10 @@ mod tests {
             TypeIdPrefix::try_from("InvalidString").unwrap_err(),
             ValidationError::InvalidStartCharacter
         );
-        assert_eq!("InvalidString".create_prefix_sanitized().as_str(), "invalidstring");
+        assert_eq!(
+            "InvalidString".create_prefix_sanitized().as_str(),
+            "invalidstring"
+        );
     }
 
     #[test]
@@ -215,7 +234,10 @@ mod tests {
             TypeIdPrefix::try_from("invalid_string!").unwrap_err(),
             ValidationError::InvalidEndCharacter
         );
-        assert_eq!("invalid_string!".create_prefix_sanitized().as_str(), "invalid_string");
+        assert_eq!(
+            "invalid_string!".create_prefix_sanitized().as_str(),
+            "invalid_string"
+        );
     }
 
     #[test]

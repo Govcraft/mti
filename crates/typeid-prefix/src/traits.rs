@@ -3,4 +3,3 @@ pub use validate::Validate;
 
 mod prefix_factory;
 mod validate;
-

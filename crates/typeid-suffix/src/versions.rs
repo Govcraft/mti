@@ -13,7 +13,7 @@ use uuid::Uuid;
 ///
 /// This trait is implemented by all UUID version structs in this module,
 /// allowing them to be used interchangeably where a UUID version is required.
-pub trait UuidVersion: Deref<Target=Uuid> {}
+pub trait UuidVersion: Deref<Target = Uuid> {}
 
 /// Represents a Version 1 UUID (time-based).
 ///

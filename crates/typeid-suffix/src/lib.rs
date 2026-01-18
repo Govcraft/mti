@@ -184,23 +184,22 @@ mod tests {
         assert_eq!(uuid.get_version(), Some(Version::SortRand));
     }
 
-
     #[test]
     fn test_typeid_suffix_explicit_version() {
         let _suffix = TypeIdSuffix::new::<V4>();
     }
 
     prop_compose! {
-    fn arbitrary_uuidv7()(timestamp in 0..=0xFFFF_FFFF_FFFF_FFFFu64, counter in 0..0x3FFFu16) -> Uuid {
-        let mut bytes = [0u8; 16];
-        bytes[0..8].copy_from_slice(&timestamp.to_be_bytes());
-        bytes[8..10].copy_from_slice(&counter.to_be_bytes());
-        bytes[6] = (bytes[6] & 0x0F) | 0x70; // Set version to 7
-        bytes[8] = (bytes[8] & 0x3F) | 0x80; // Set variant to RFC4122
-        Uuid::from_bytes(bytes)
-    }
+        fn arbitrary_uuidv7()(timestamp in 0..=0xFFFF_FFFF_FFFF_FFFFu64, counter in 0..0x3FFFu16) -> Uuid {
+            let mut bytes = [0u8; 16];
+            bytes[0..8].copy_from_slice(&timestamp.to_be_bytes());
+            bytes[8..10].copy_from_slice(&counter.to_be_bytes());
+            bytes[6] = (bytes[6] & 0x0F) | 0x70; // Set version to 7
+            bytes[8] = (bytes[8] & 0x3F) | 0x80; // Set variant to RFC4122
+            Uuid::from_bytes(bytes)
+        }
 
-}
+    }
     prop_compose! {
         fn arbitrary_uuid_other()(version in 1u8..=5u8, bytes in proptest::array::uniform16(any::<u8>())) -> Uuid {
             let mut uuid_bytes = bytes;
@@ -209,12 +208,12 @@ mod tests {
             Uuid::from_bytes(uuid_bytes)
         }
     }
-    
+
     #[cfg(test)]
     #[cfg(feature = "serde")]
     mod serde_tests {
         use super::*;
-        
+
         #[test]
         fn test_typeid_suffix_serialize() {
             let suffix = TypeIdSuffix::default();
@@ -222,7 +221,7 @@ mod tests {
             assert!(serialized.starts_with('"') && serialized.ends_with('"'));
             assert_eq!(serialized.len(), 28); // 26 chars + 2 quotes
         }
-        
+
         #[test]
         fn test_typeid_suffix_deserialize() {
             let suffix = TypeIdSuffix::default();
@@ -230,7 +229,7 @@ mod tests {
             let deserialized: TypeIdSuffix = serde_json::from_str(&serialized).unwrap();
             assert_eq!(suffix, deserialized);
         }
-        
+
         #[test]
         fn test_typeid_suffix_deserialize_error() {
             let result = serde_json::from_str::<TypeIdSuffix>("\"invalid_suffix\"");

@@ -6,7 +6,4 @@ use crate::ValidationError;
 /// `AsRef<str>` and can be converted to a `TypeIdPrefix` using `TryFrom`.
 pub trait Validate {}
 
-impl<T> Validate for T
-where
-    T: AsRef<str> + TryFrom<T, Error=ValidationError>,
-{}
+impl<T> Validate for T where T: AsRef<str> + TryFrom<T, Error = ValidationError> {}

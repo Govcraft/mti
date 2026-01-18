@@ -193,7 +193,8 @@ impl TypeIdSuffix {
     #[inline]
     #[must_use]
     pub fn to_uuid(&self) -> Uuid {
-        let decoded_bytes = decode_base32(&self.0).expect("This should never fail because we've already validated the input");
+        let decoded_bytes = decode_base32(&self.0)
+            .expect("This should never fail because we've already validated the input");
         Uuid::from_bytes(decoded_bytes)
     }
 
@@ -227,7 +228,10 @@ impl TypeIdSuffix {
 impl TypeIdSuffix {
     /// Checks if the ``TypeIdSuffix`` contains a V6 or V7 UUID.
     fn is_sortable(&self) -> bool {
-        matches!(self.to_uuid().get_version(), Some(Version::SortMac | Version::SortRand))
+        matches!(
+            self.to_uuid().get_version(),
+            Some(Version::SortMac | Version::SortRand)
+        )
     }
 }
 
@@ -359,15 +363,24 @@ impl FromStr for TypeIdSuffix {
     /// ```
     fn from_str(input: &str) -> Result<Self, Self::Err> {
         if input.len() != 26 {
-            return Err(DecodeError::InvalidSuffix(InvalidSuffixReason::InvalidLength));
+            return Err(DecodeError::InvalidSuffix(
+                InvalidSuffixReason::InvalidLength,
+            ));
         }
         if !input.is_ascii() {
-            return Err(DecodeError::InvalidSuffix(InvalidSuffixReason::NonAsciiCharacter));
+            return Err(DecodeError::InvalidSuffix(
+                InvalidSuffixReason::NonAsciiCharacter,
+            ));
         }
         if input.as_bytes()[0] > b'7' {
-            return Err(DecodeError::InvalidSuffix(InvalidSuffixReason::InvalidFirstCharacter));
+            return Err(DecodeError::InvalidSuffix(
+                InvalidSuffixReason::InvalidFirstCharacter,
+            ));
         }
-        let encoded_bytes: [u8; 26] = input.as_bytes().try_into().map_err(|_| DecodeError::InvalidSuffix(InvalidSuffixReason::InvalidLength))?;
+        let encoded_bytes: [u8; 26] = input
+            .as_bytes()
+            .try_into()
+            .map_err(|_| DecodeError::InvalidSuffix(InvalidSuffixReason::InvalidLength))?;
         let decoded_bytes = decode_base32(&encoded_bytes)?;
         let uuid = Uuid::from_bytes(decoded_bytes);
         if !Self::is_valid_uuid(&uuid) {

@@ -200,9 +200,9 @@
 //!
 //! Happy coding with Magic Type ID! 🎩✨
 
-mod magic_type_id_ext;
-mod magic_type_id;
 mod errors;
+mod magic_type_id;
+mod magic_type_id_ext;
 
 /// A prelude module that re-exports the most commonly used types and traits.
 ///
@@ -236,7 +236,7 @@ pub mod prelude {
     ///
     /// This trait is implemented for `str`, allowing for easy creation of `MagicTypeId`s from string literals.
     pub use crate::magic_type_id_ext::MagicTypeIdExt;
-    
+
     /// Re-exports the `tracing` crate when the "instrument" feature is enabled.
     ///
     /// This allows users of this crate to access tracing functionality without having to
@@ -263,7 +263,8 @@ mod tests {
         let suffix = TypeIdSuffix::default();
         let slug_id = MagicTypeId::new("prefix".create_prefix_sanitized(), suffix);
         let slug_two: MagicTypeId = "another_prefix_01h455vb4pex5vsknk084sn02q".parse().unwrap();
-        let slug_bad: Result<MagicTypeId, MagicTypeIdError> = "another_prefix_01h455vb4pNOPEsknk084sn02q".parse();
+        let slug_bad: Result<MagicTypeId, MagicTypeIdError> =
+            "another_prefix_01h455vb4pNOPEsknk084sn02q".parse();
 
         assert_eq!(slug_two.prefix().as_str(), "another_prefix");
         assert_eq!(slug_id.prefix().to_string().as_str(), "prefix");
@@ -283,7 +284,10 @@ mod tests {
         assert_eq!(no_prefix.uuid_str().unwrap().len(), 36);
 
         let invalid_prefix = "Invalid_Prefix_01h455vb4pex5vsknk084sn02q";
-        assert_eq!(invalid_prefix.create_prefix_sanitized().as_str(), "invalid_prefix_hvbpexvsknksnq");
+        assert_eq!(
+            invalid_prefix.create_prefix_sanitized().as_str(),
+            "invalid_prefix_hvbpexvsknksnq"
+        );
         assert!(invalid_prefix.prefix_str().is_err());
         assert_eq!(invalid_prefix.uuid_str().unwrap().len(), 36);
 
@@ -297,7 +301,10 @@ mod tests {
     fn test_nil() {
         let slug_id: MagicTypeId = "00000000000000000000000000".parse().unwrap();
         assert!(slug_id.prefix().is_empty());
-        assert_eq!(slug_id.suffix().to_uuid().to_string(), "00000000-0000-0000-0000-000000000000");
+        assert_eq!(
+            slug_id.suffix().to_uuid().to_string(),
+            "00000000-0000-0000-0000-000000000000"
+        );
     }
 
     #[test]
@@ -322,7 +329,7 @@ mod tests {
         assert!(invalid_result.is_err());
     }
     #[test]
-    fn doc_smoke_tests(){
+    fn doc_smoke_tests() {
         // Sanitized creation (always produces a valid prefix)
         let sanitized_id = "Invalid Prefix!".create_type_id::<V7>();
         assert!(sanitized_id.to_string().starts_with("invalidprefix_"));
@@ -349,12 +356,15 @@ mod tests {
 
         let namespace = Uuid::parse_str("6ba7b810-9dad-11d1-80b4-00c04fd430c8").unwrap();
         let name = "example.com";
-        let v5_uuid = Uuid::new_v5( & namespace, name.as_bytes());
+        let v5_uuid = Uuid::new_v5(&namespace, name.as_bytes());
         let domain_id = MagicTypeId::new(
             TypeIdPrefix::from_str("domain").unwrap(),
-            TypeIdSuffix::from(v5_uuid)
+            TypeIdSuffix::from(v5_uuid),
         );
-        assert_eq!(domain_id.uuid_str().unwrap(), "cfbff0d1-9375-5685-968c-48ce8b15ae17");
+        assert_eq!(
+            domain_id.uuid_str().unwrap(),
+            "cfbff0d1-9375-5685-968c-48ce8b15ae17"
+        );
     }
 
     #[test]
@@ -367,13 +377,16 @@ mod tests {
 
         // Create id1 with an earlier timestamp
         let id1 = MagicTypeId::new(prefix1.clone(), TypeIdSuffix::new::<V7>());
-        sleep(Duration::from_millis(10));  // Ensure different timestamps
+        sleep(Duration::from_millis(10)); // Ensure different timestamps
 
         // Create id2 with a later timestamp
         let id2 = MagicTypeId::new(prefix1, TypeIdSuffix::new::<V7>());
 
         // Create id3 with the same timestamp as id2 but different prefix
-        let id3 = MagicTypeId::new(prefix2, TypeIdSuffix::from_str(id2.suffix().as_ref()).unwrap());
+        let id3 = MagicTypeId::new(
+            prefix2,
+            TypeIdSuffix::from_str(id2.suffix().as_ref()).unwrap(),
+        );
 
         println!("id1: {id1}");
         println!("id2: {id2}");
@@ -393,10 +406,17 @@ mod tests {
         println!("id3 vs id2: {id3_vs_id2:?}");
 
         // Check primary ordering by timestamp
-        assert!(id1 < id2, "Expected id1 to be less than id2 due to earlier timestamp");
+        assert!(
+            id1 < id2,
+            "Expected id1 to be less than id2 due to earlier timestamp"
+        );
 
         // Check that id3 and id2 have the same suffix
-        assert_eq!(id2.suffix(), id3.suffix(), "Suffixes for id2 and id3 should be the same");
+        assert_eq!(
+            id2.suffix(),
+            id3.suffix(),
+            "Suffixes for id2 and id3 should be the same"
+        );
 
         // Check secondary ordering by prefix when timestamps are equal
         assert!(id3 < id2, "Expected id3 to be less than id2 due to lexicographically smaller prefix when timestamps are equal");
@@ -411,7 +431,7 @@ mod tests {
         let prefix2 = TypeIdPrefix::from_str("admin").unwrap();
 
         let id1 = MagicTypeId::new(prefix1.clone(), TypeIdSuffix::new::<V7>());
-        sleep(Duration::from_millis(10));  // Ensure different timestamps
+        sleep(Duration::from_millis(10)); // Ensure different timestamps
         let id2 = MagicTypeId::new(prefix1.clone(), TypeIdSuffix::new::<V7>());
         let id3 = MagicTypeId::new(prefix2.clone(), TypeIdSuffix::new::<V7>());
 
@@ -420,7 +440,10 @@ mod tests {
         println!("id3: {id3}");
 
         // Test ordering by suffix (timestamp) first
-        assert!(id1 < id2, "Expected id1 to be less than id2 due to earlier timestamp");
+        assert!(
+            id1 < id2,
+            "Expected id1 to be less than id2 due to earlier timestamp"
+        );
 
         // Test ordering by prefix when timestamps are equal
         let same_timestamp_suffix = id1.suffix().clone();
@@ -429,6 +452,4 @@ mod tests {
 
         assert!(id4 < id5, "Expected id4 (admin) to be less than id5 (user) due to lexicographically smaller prefix when timestamps are equal");
     }
-
-
 }

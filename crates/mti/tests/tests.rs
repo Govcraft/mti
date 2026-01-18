@@ -17,14 +17,14 @@ fn takes_as_ref<T: AsRef<str>>(s: T) {
 fn test_magic_typeid_capabilities() {
     // Create a `MagicTypeId`
     let prefix: TypeIdPrefix = "user".try_into().expect("Valid prefix");
-    let suffix = TypeIdSuffix::new::<Nil>();  // Using Nil for deterministic testing
+    let suffix = TypeIdSuffix::new::<Nil>(); // Using Nil for deterministic testing
     let magic_id = MagicTypeId::new(prefix, suffix);
 
     // Test string-like behavior
     let magic_str = magic_id.to_string();
     assert!(magic_id.starts_with("user_"));
-    assert_eq!(magic_id.len(), 31);  // "user" + "_" + 26 chars for suffix
-    assert_eq!(magic_id, "user_00000000000000000000000000");  // "user" + "_" + Nil UUID
+    assert_eq!(magic_id.len(), 31); // "user" + "_" + 26 chars for suffix
+    assert_eq!(magic_id, "user_00000000000000000000000000"); // "user" + "_" + Nil UUID
 
     // Can be used as a string slice
     let len = magic_id.len();
@@ -78,4 +78,3 @@ fn test_general() {
     assert!("HelloWorld".try_create_type_id::<V7>().is_err());
     assert_eq!("HelloWorld".create_type_id::<V7>().prefix(), "helloworld");
 }
-

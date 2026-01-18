@@ -25,7 +25,7 @@ mod tests {
 
         // Test try_uuid() method
         let try_uuid = valid_str.uuid_str().unwrap();
-        assert_eq!(try_uuid.len(), 36);  // UUID string length
+        assert_eq!(try_uuid.len(), 36); // UUID string length
 
         // Test magic_type_id() method
         let magic_id = "user".create_type_id::<V7>();
@@ -46,7 +46,10 @@ mod tests {
 
         // Test with an invalid prefix
         let invalid_prefix = "Invalid Prefix_01h455vb4pex5vsknk084sn02q";
-        assert_eq!(invalid_prefix.create_prefix_sanitized().as_str(), "invalidprefix_hvbpexvsknksnq");
+        assert_eq!(
+            invalid_prefix.create_prefix_sanitized().as_str(),
+            "invalidprefix_hvbpexvsknksnq"
+        );
         assert!(invalid_prefix.prefix_str().is_err());
         assert_eq!(invalid_prefix.suffix_str().unwrap().len(), 26);
         assert_eq!(invalid_prefix.uuid_str().unwrap().len(), 36);

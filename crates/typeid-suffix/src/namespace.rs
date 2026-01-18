@@ -261,8 +261,7 @@ impl FromStr for NamespaceId {
     /// assert_eq!(namespace, NamespaceId::DNS);
     /// ```
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let uuid =
-            Uuid::parse_str(s).map_err(|_| DecodeError::InvalidNamespace(s.to_string()))?;
+        let uuid = Uuid::parse_str(s).map_err(|_| DecodeError::InvalidNamespace(s.to_string()))?;
         Ok(Self::new(uuid))
     }
 }
@@ -353,10 +352,7 @@ mod tests {
     fn as_ref_provides_uuid_reference() {
         let namespace = NamespaceId::DNS;
         let uuid_ref: &Uuid = namespace.as_ref();
-        assert_eq!(
-            uuid_ref.to_string(),
-            "6ba7b810-9dad-11d1-80b4-00c04fd430c8"
-        );
+        assert_eq!(uuid_ref.to_string(), "6ba7b810-9dad-11d1-80b4-00c04fd430c8");
     }
 
     #[test]

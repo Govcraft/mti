@@ -49,7 +49,9 @@ pub fn decode_base32(encoded: &[u8; 26]) -> Result<[u8; 16], DecodeError> {
         let value = DECODE_TABLE[character as usize];
         // If the character is invalid (not part of the base32 alphabet), return an error
         if value == 0xFF {
-            return Err(DecodeError::InvalidSuffix(InvalidSuffixReason::InvalidCharacter));
+            return Err(DecodeError::InvalidSuffix(
+                InvalidSuffixReason::InvalidCharacter,
+            ));
         }
         // Shift the existing number left by 5 bits and add the new 5-bit value
         uuid_int = (uuid_int << 5) | u128::from(value);
@@ -58,4 +60,3 @@ pub fn decode_base32(encoded: &[u8; 26]) -> Result<[u8; 16], DecodeError> {
     // Convert the resulting 128-bit integer back to a 16-byte array in big-endian order
     Ok(uuid_int.to_be_bytes())
 }
-

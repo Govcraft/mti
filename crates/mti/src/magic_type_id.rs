@@ -1,3 +1,4 @@
+use crate::errors::MagicTypeIdError;
 use std::borrow::Borrow;
 use std::cmp::Ordering;
 use std::fmt::{Display, Formatter};
@@ -6,7 +7,6 @@ use std::ops::Deref;
 use std::str::FromStr;
 use typeid_prefix::{TypeIdPrefix, ValidationError};
 use typeid_suffix::prelude::*;
-use crate::errors::MagicTypeIdError;
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
@@ -186,7 +186,11 @@ impl MagicTypeId {
         };
         #[cfg(feature = "instrument")]
         debug!("Created MagicTypeId: {}", string_repr);
-        Self { prefix, suffix, string_repr }
+        Self {
+            prefix,
+            suffix,
+            string_repr,
+        }
     }
 
     /// Returns a reference to the prefix of the `MagicTypeId`.
@@ -293,25 +297,31 @@ impl FromStr for MagicTypeId {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         if let Some((prefix_str, suffix_str)) = s.rsplit_once('_') {
             #[cfg(feature = "instrument")]
-            trace!("Parsing MagicTypeId with prefix '{}' and suffix '{}'", prefix_str, suffix_str);
-            
+            trace!(
+                "Parsing MagicTypeId with prefix '{}' and suffix '{}'",
+                prefix_str,
+                suffix_str
+            );
+
             if prefix_str.is_empty() {
                 #[cfg(feature = "instrument")]
                 debug!("Empty prefix found, returning error");
-                return Err(MagicTypeIdError::Prefix(ValidationError::InvalidStartCharacter));
+                return Err(MagicTypeIdError::Prefix(
+                    ValidationError::InvalidStartCharacter,
+                ));
             }
             let prefix = TypeIdPrefix::from_str(prefix_str)?;
             let suffix = TypeIdSuffix::from_str(suffix_str)?;
-            
+
             #[cfg(feature = "instrument")]
             debug!("Successfully parsed MagicTypeId with prefix and suffix");
             Ok(Self::new(prefix, suffix))
         } else {
             #[cfg(feature = "instrument")]
             trace!("Parsing MagicTypeId with no prefix, only suffix '{}'", s);
-            
+
             let suffix = TypeIdSuffix::from_str(s)?;
-            
+
             #[cfg(feature = "instrument")]
             debug!("Successfully parsed MagicTypeId with no prefix");
             Ok(Self::new(TypeIdPrefix::default(), suffix))

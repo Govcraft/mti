@@ -51,12 +51,11 @@ impl<'de> Deserialize<'de> for TypeIdPrefix {
     {
         // Deserialize as a string first
         let s = String::deserialize(deserializer)?;
-        
+
         // Then validate according to TypeID specification
         Self::validate(&s).map_err(serde::de::Error::custom)
     }
 }
-
 
 impl PartialEq<str> for TypeIdPrefix {
     fn eq(&self, other: &str) -> bool {
@@ -152,8 +151,7 @@ impl FromStr for TypeIdPrefix {
     }
 }
 
-impl TryFrom<String> for TypeIdPrefix
-{
+impl TryFrom<String> for TypeIdPrefix {
     type Error = ValidationError;
 
     /// Attempts to create a `TypeIdPrefix` from a `String`.
@@ -179,8 +177,7 @@ impl TryFrom<String> for TypeIdPrefix
     }
 }
 
-impl TryFrom<&str> for TypeIdPrefix
-{
+impl TryFrom<&str> for TypeIdPrefix {
     type Error = ValidationError;
 
     /// Attempts to create a `TypeIdPrefix` from a string slice.
@@ -205,7 +202,6 @@ impl TryFrom<&str> for TypeIdPrefix
         Self::validate(input)
     }
 }
-
 
 impl TypeIdPrefix {
     pub(crate) fn validate(input: &str) -> Result<Self, ValidationError> {
@@ -252,7 +248,9 @@ impl TypeIdPrefix {
             result = result.chars().take(63).collect();
         }
 
-        result = result.to_ascii_lowercase().chars()
+        result = result
+            .to_ascii_lowercase()
+            .chars()
             .filter(|&c| (c.is_ascii_lowercase() || c == '_') && c.is_ascii())
             .collect::<String>();
 
@@ -280,7 +278,6 @@ impl TypeIdPrefix {
         &self.0
     }
 }
-
 
 impl fmt::Display for TypeIdPrefix {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
