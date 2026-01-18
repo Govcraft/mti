@@ -24,7 +24,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! typeid_suffix = "1.2.0"
+//! typeid_suffix = "1.3.0"
 //! ```
 //!
 //! ## Usage Examples
@@ -147,9 +147,9 @@
 //!
 //! Contributions are welcome! Please feel free to submit a Pull Request.
 
-mod errors;
 mod encoding;
-
+mod errors;
+mod namespace;
 mod typeid_suffix;
 mod versions;
 
@@ -158,9 +158,12 @@ mod versions;
 /// By adding `use typeid_suffix::prelude::*;` to your code, you can easily
 /// access the most frequently used types and traits from this crate.
 pub mod prelude {
+    pub use std::str::FromStr;
+
     pub use uuid::{Uuid, Version};
 
     pub use crate::errors::*;
+    pub use crate::namespace::NamespaceId;
     pub use crate::typeid_suffix::TypeIdSuffix;
     pub use crate::versions::*;
 }

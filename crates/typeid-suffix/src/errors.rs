@@ -16,6 +16,11 @@ pub enum DecodeError {
     InvalidSuffix(InvalidSuffixReason),
     /// Represents an error with the underlying UUID.
     InvalidUuid(InvalidUuidReason),
+    /// The namespace UUID string is invalid.
+    ///
+    /// This error occurs when attempting to parse a namespace UUID
+    /// from a string that doesn't match UUID format.
+    InvalidNamespace(String),
 }
 
 /// Specifies the reason for an invalid `TypeID` suffix.
@@ -53,6 +58,9 @@ impl fmt::Display for DecodeError {
         let msg = match self {
             Self::InvalidSuffix(reason) => format!("Invalid `TypeID` suffix: {reason}"),
             Self::InvalidUuid(reason) => format!("Invalid UUID: {reason}"),
+            Self::InvalidNamespace(s) => format!(
+                "invalid namespace UUID '{s}': expected format like '6ba7b810-9dad-11d1-80b4-00c04fd430c8'"
+            ),
         };
 
         #[cfg(feature = "instrument")]

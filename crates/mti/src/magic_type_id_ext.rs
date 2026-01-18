@@ -333,6 +333,128 @@ pub trait MagicTypeIdExt {
     /// assert!("Invalid Prefix!".try_create_type_id_with_suffix::<V7>(suffix).is_err());
     /// ```
     fn try_create_type_id_with_suffix<V: UuidVersion + Default>(&self, suffix: TypeIdSuffix) -> Result<MagicTypeId, MagicTypeIdError>;
+
+    /// Creates a `MagicTypeId` with a V3 UUID (MD5-based name hash).
+    ///
+    /// This method sanitizes the prefix and creates a deterministic type ID
+    /// from a namespace and name using the MD5 hashing algorithm.
+    ///
+    /// # Arguments
+    ///
+    /// * `namespace` - The namespace identifier for the UUID.
+    /// * `name` - The byte slice to hash with the namespace.
+    ///
+    /// # Returns
+    ///
+    /// A new `MagicTypeId` with a sanitized prefix and V3 suffix.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use mti::prelude::*;
+    ///
+    /// let domain_id = "domain".create_type_id_v3(NamespaceId::DNS, b"example.com");
+    /// assert_eq!(domain_id.prefix().as_str(), "domain");
+    /// ```
+    fn create_type_id_v3(&self, namespace: NamespaceId, name: &[u8]) -> MagicTypeId;
+
+    /// Creates a `MagicTypeId` with a V5 UUID (SHA-1-based name hash).
+    ///
+    /// This method sanitizes the prefix and creates a deterministic type ID
+    /// from a namespace and name using the SHA-1 hashing algorithm. V5 is
+    /// preferred over V3 due to better security properties.
+    ///
+    /// # Arguments
+    ///
+    /// * `namespace` - The namespace identifier for the UUID.
+    /// * `name` - The byte slice to hash with the namespace.
+    ///
+    /// # Returns
+    ///
+    /// A new `MagicTypeId` with a sanitized prefix and V5 suffix.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use mti::prelude::*;
+    ///
+    /// let domain_id = "domain".create_type_id_v5(NamespaceId::DNS, b"example.com");
+    /// assert_eq!(domain_id.prefix().as_str(), "domain");
+    ///
+    /// let url_id = "page".create_type_id_v5(NamespaceId::URL, b"https://example.com/about");
+    /// assert_eq!(url_id.prefix().as_str(), "page");
+    /// ```
+    fn create_type_id_v5(&self, namespace: NamespaceId, name: &[u8]) -> MagicTypeId;
+
+    /// Attempts to create a `MagicTypeId` with a V3 UUID (MD5-based name hash).
+    ///
+    /// This method validates the prefix strictly and creates a deterministic
+    /// type ID from a namespace and name using the MD5 hashing algorithm.
+    ///
+    /// # Arguments
+    ///
+    /// * `namespace` - The namespace identifier for the UUID.
+    /// * `name` - The byte slice to hash with the namespace.
+    ///
+    /// # Returns
+    ///
+    /// A `Result` containing either the new `MagicTypeId` or a `MagicTypeIdError`.
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the prefix is invalid.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use mti::prelude::*;
+    ///
+    /// let result = "valid_prefix".try_create_type_id_v3(NamespaceId::DNS, b"example.com");
+    /// assert!(result.is_ok());
+    ///
+    /// let result = "Invalid Prefix!".try_create_type_id_v3(NamespaceId::DNS, b"example.com");
+    /// assert!(result.is_err());
+    /// ```
+    fn try_create_type_id_v3(
+        &self,
+        namespace: NamespaceId,
+        name: &[u8],
+    ) -> Result<MagicTypeId, MagicTypeIdError>;
+
+    /// Attempts to create a `MagicTypeId` with a V5 UUID (SHA-1-based name hash).
+    ///
+    /// This method validates the prefix strictly and creates a deterministic
+    /// type ID from a namespace and name using the SHA-1 hashing algorithm.
+    ///
+    /// # Arguments
+    ///
+    /// * `namespace` - The namespace identifier for the UUID.
+    /// * `name` - The byte slice to hash with the namespace.
+    ///
+    /// # Returns
+    ///
+    /// A `Result` containing either the new `MagicTypeId` or a `MagicTypeIdError`.
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the prefix is invalid.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use mti::prelude::*;
+    ///
+    /// let result = "valid_prefix".try_create_type_id_v5(NamespaceId::DNS, b"example.com");
+    /// assert!(result.is_ok());
+    ///
+    /// let result = "Invalid Prefix!".try_create_type_id_v5(NamespaceId::DNS, b"example.com");
+    /// assert!(result.is_err());
+    /// ```
+    fn try_create_type_id_v5(
+        &self,
+        namespace: NamespaceId,
+        name: &[u8],
+    ) -> Result<MagicTypeId, MagicTypeIdError>;
 }
 
 impl MagicTypeIdExt for str {
@@ -501,11 +623,83 @@ impl MagicTypeIdExt for str {
     fn try_create_type_id_with_suffix<V: UuidVersion + Default>(&self, suffix: TypeIdSuffix) -> Result<MagicTypeId, MagicTypeIdError> {
         #[cfg(feature = "instrument")]
         trace!("Attempting to create MagicTypeId with validated prefix and provided suffix");
-        
+
         let prefix = TypeIdPrefix::try_from(self)?;
         #[cfg(feature = "instrument")]
         debug!("Successfully validated prefix: '{}'", prefix);
-        
+
+        Ok(MagicTypeId::new(prefix, suffix))
+    }
+
+    #[cfg_attr(feature = "instrument", instrument(level = "debug", skip(self, name), fields(input = %self, namespace = %namespace)))]
+    fn create_type_id_v3(&self, namespace: NamespaceId, name: &[u8]) -> MagicTypeId {
+        #[cfg(feature = "instrument")]
+        trace!("Creating MagicTypeId with V3 UUID from namespace");
+
+        let prefix = self.create_prefix_sanitized();
+        #[cfg(feature = "instrument")]
+        debug!("Sanitized prefix: '{}'", prefix);
+
+        let suffix = TypeIdSuffix::new_v3(namespace, name);
+        #[cfg(feature = "instrument")]
+        debug!("Created V3 TypeIdSuffix: '{}'", suffix);
+
+        MagicTypeId::new(prefix, suffix)
+    }
+
+    #[cfg_attr(feature = "instrument", instrument(level = "debug", skip(self, name), fields(input = %self, namespace = %namespace)))]
+    fn create_type_id_v5(&self, namespace: NamespaceId, name: &[u8]) -> MagicTypeId {
+        #[cfg(feature = "instrument")]
+        trace!("Creating MagicTypeId with V5 UUID from namespace");
+
+        let prefix = self.create_prefix_sanitized();
+        #[cfg(feature = "instrument")]
+        debug!("Sanitized prefix: '{}'", prefix);
+
+        let suffix = TypeIdSuffix::new_v5(namespace, name);
+        #[cfg(feature = "instrument")]
+        debug!("Created V5 TypeIdSuffix: '{}'", suffix);
+
+        MagicTypeId::new(prefix, suffix)
+    }
+
+    #[cfg_attr(feature = "instrument", instrument(level = "debug", skip(self, name), fields(input = %self, namespace = %namespace)))]
+    fn try_create_type_id_v3(
+        &self,
+        namespace: NamespaceId,
+        name: &[u8],
+    ) -> Result<MagicTypeId, MagicTypeIdError> {
+        #[cfg(feature = "instrument")]
+        trace!("Attempting to create MagicTypeId with V3 UUID from namespace");
+
+        let prefix = TypeIdPrefix::try_from(self)?;
+        #[cfg(feature = "instrument")]
+        debug!("Successfully validated prefix: '{}'", prefix);
+
+        let suffix = TypeIdSuffix::new_v3(namespace, name);
+        #[cfg(feature = "instrument")]
+        debug!("Created V3 TypeIdSuffix: '{}'", suffix);
+
+        Ok(MagicTypeId::new(prefix, suffix))
+    }
+
+    #[cfg_attr(feature = "instrument", instrument(level = "debug", skip(self, name), fields(input = %self, namespace = %namespace)))]
+    fn try_create_type_id_v5(
+        &self,
+        namespace: NamespaceId,
+        name: &[u8],
+    ) -> Result<MagicTypeId, MagicTypeIdError> {
+        #[cfg(feature = "instrument")]
+        trace!("Attempting to create MagicTypeId with V5 UUID from namespace");
+
+        let prefix = TypeIdPrefix::try_from(self)?;
+        #[cfg(feature = "instrument")]
+        debug!("Successfully validated prefix: '{}'", prefix);
+
+        let suffix = TypeIdSuffix::new_v5(namespace, name);
+        #[cfg(feature = "instrument")]
+        debug!("Created V5 TypeIdSuffix: '{}'", suffix);
+
         Ok(MagicTypeId::new(prefix, suffix))
     }
 }
@@ -525,5 +719,117 @@ mod ext_tests {
         let new_id = prefix.create_type_id::<Nil>();
         assert_eq!(new_id.to_string(), "user_00000000000000000000000000");
         assert_eq!(new_id.uuid_str().unwrap(), "00000000-0000-0000-0000-000000000000");
+    }
+}
+
+#[cfg(test)]
+mod namespace_ext_tests {
+    use crate::prelude::*;
+
+    #[test]
+    fn create_type_id_v3_with_valid_prefix() {
+        let type_id = "domain".create_type_id_v3(NamespaceId::DNS, b"example.com");
+        assert_eq!(type_id.prefix().as_str(), "domain");
+        assert_eq!(type_id.suffix().to_uuid().get_version(), Some(Version::Md5));
+    }
+
+    #[test]
+    fn create_type_id_v5_with_valid_prefix() {
+        let type_id = "domain".create_type_id_v5(NamespaceId::DNS, b"example.com");
+        assert_eq!(type_id.prefix().as_str(), "domain");
+        assert_eq!(type_id.suffix().to_uuid().get_version(), Some(Version::Sha1));
+    }
+
+    #[test]
+    fn create_type_id_v3_sanitizes_invalid_prefix() {
+        let type_id = "Invalid Prefix!".create_type_id_v3(NamespaceId::DNS, b"example.com");
+        assert!(type_id.prefix().as_str().starts_with("invalidprefix"));
+    }
+
+    #[test]
+    fn create_type_id_v5_sanitizes_invalid_prefix() {
+        let type_id = "Invalid Prefix!".create_type_id_v5(NamespaceId::DNS, b"example.com");
+        assert!(type_id.prefix().as_str().starts_with("invalidprefix"));
+    }
+
+    #[test]
+    fn create_type_id_v3_is_deterministic() {
+        let id1 = "domain".create_type_id_v3(NamespaceId::DNS, b"example.com");
+        let id2 = "domain".create_type_id_v3(NamespaceId::DNS, b"example.com");
+        assert_eq!(id1, id2);
+    }
+
+    #[test]
+    fn create_type_id_v5_is_deterministic() {
+        let id1 = "domain".create_type_id_v5(NamespaceId::DNS, b"example.com");
+        let id2 = "domain".create_type_id_v5(NamespaceId::DNS, b"example.com");
+        assert_eq!(id1, id2);
+    }
+
+    #[test]
+    fn try_create_type_id_v3_with_valid_prefix() {
+        let result = "valid_prefix".try_create_type_id_v3(NamespaceId::DNS, b"example.com");
+        assert!(result.is_ok());
+        let type_id = result.unwrap();
+        assert_eq!(type_id.prefix().as_str(), "valid_prefix");
+    }
+
+    #[test]
+    fn try_create_type_id_v5_with_valid_prefix() {
+        let result = "valid_prefix".try_create_type_id_v5(NamespaceId::DNS, b"example.com");
+        assert!(result.is_ok());
+        let type_id = result.unwrap();
+        assert_eq!(type_id.prefix().as_str(), "valid_prefix");
+    }
+
+    #[test]
+    fn try_create_type_id_v3_with_invalid_prefix() {
+        let result = "Invalid Prefix!".try_create_type_id_v3(NamespaceId::DNS, b"example.com");
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn try_create_type_id_v5_with_invalid_prefix() {
+        let result = "Invalid Prefix!".try_create_type_id_v5(NamespaceId::DNS, b"example.com");
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn v5_example_matches_docs() {
+        // Reproduce the example from lib.rs docs
+        let type_id = "domain".create_type_id_v5(NamespaceId::DNS, b"example.com");
+        assert_eq!(
+            type_id.suffix().to_uuid().to_string(),
+            "cfbff0d1-9375-5685-968c-48ce8b15ae17"
+        );
+    }
+
+    #[test]
+    fn v3_different_from_v5() {
+        let id_v3 = "domain".create_type_id_v3(NamespaceId::DNS, b"example.com");
+        let id_v5 = "domain".create_type_id_v5(NamespaceId::DNS, b"example.com");
+        assert_ne!(id_v3, id_v5);
+    }
+
+    #[test]
+    fn different_namespaces_produce_different_ids() {
+        let dns_id = "domain".create_type_id_v5(NamespaceId::DNS, b"example.com");
+        let url_id = "domain".create_type_id_v5(NamespaceId::URL, b"example.com");
+        assert_ne!(dns_id, url_id);
+    }
+
+    #[test]
+    fn different_names_produce_different_ids() {
+        let id1 = "domain".create_type_id_v5(NamespaceId::DNS, b"example.com");
+        let id2 = "domain".create_type_id_v5(NamespaceId::DNS, b"different.com");
+        assert_ne!(id1, id2);
+    }
+
+    #[test]
+    fn custom_namespace_works() {
+        let custom_ns = NamespaceId::from_str("6ba7b810-9dad-11d1-80b4-00c04fd430c8").unwrap();
+        let type_id = "test".create_type_id_v5(custom_ns, b"test-name");
+        assert_eq!(type_id.prefix().as_str(), "test");
+        assert_eq!(type_id.suffix().to_uuid().get_version(), Some(Version::Sha1));
     }
 }
