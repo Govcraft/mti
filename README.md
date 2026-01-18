@@ -31,7 +31,7 @@ Add the main crate to your project:
 
 ```toml
 [dependencies]
-mti = "1.0"
+mti = "1.1"
 ```
 
 Create and parse TypeIDs:
@@ -95,7 +95,7 @@ This separation allows using `typeid-prefix` for input validation without UUID g
 
 **Specification Compliance**: Implements TypeID v0.3.0 from Jetify, ensuring format compatibility with other TypeID implementations across languages and platforms—your Rust services can exchange TypeIDs with TypeScript, Go, or Python services.
 
-**UUID Version Support**: Handles UUIDv1, v3, v4, v5, v6, v7, and Nil. Defaults to v7 for new identifiers, providing time-sortability and global uniqueness. Use v5 for deterministic IDs (same input always produces same ID) and v4 for simple random identifiers.
+**UUID Version Support**: Handles UUIDv1, v3, v4, v5, v6, v7, and Nil. Defaults to v7 for new identifiers, providing time-sortability and global uniqueness. Use v5 for deterministic IDs (same input always produces same ID) and v4 for simple random identifiers. Built-in `NamespaceId` with RFC 4122 constants (DNS, URL, OID, X500) makes creating deterministic IDs ergonomic—no need to add `uuid` as a direct dependency.
 
 **Zero Unsafe Code**: All three crates forbid unsafe code via `#![deny(unsafe_code)]`, eliminating entire classes of memory safety vulnerabilities. Safety is guaranteed by the compiler, not runtime checks—critical for production systems handling sensitive identifiers.
 
@@ -121,14 +121,15 @@ let session_id = "session".create_type_id::<V4>();
 
 // UUIDv5 (deterministic - same namespace+name always produces same ID)
 // Use for content-addressable storage or idempotent operations
-use uuid::Uuid;
-let namespace = Uuid::parse_str("6ba7b810-9dad-11d1-80b4-00c04fd430c8")?;
-let name = "unique_resource_name";
-let v5_uuid = Uuid::new_v5(&namespace, name.as_bytes());
-let prefix = TypeIdPrefix::try_from("resource")?;
-let suffix = TypeIdSuffix::from(v5_uuid);
-let resource_id = MagicTypeId::new(prefix, suffix);
-println!("{}", resource_id); // Always the same for this namespace+name
+let domain_id = "domain".create_type_id_v5(NamespaceId::DNS, b"example.com");
+println!("{}", domain_id); // Always the same for this namespace+name
+
+// Well-known namespaces: DNS, URL, OID, X500 (RFC 4122)
+let url_id = "page".create_type_id_v5(NamespaceId::URL, b"https://example.com/about");
+
+// Custom namespace from UUID string
+let custom_ns = NamespaceId::from_str("6ba7b810-9dad-11d1-80b4-00c04fd430c8")?;
+let resource_id = "resource".create_type_id_v5(custom_ns, b"unique_resource_name");
 ```
 
 ### Parsing and Extracting Components
