@@ -273,9 +273,8 @@ impl TypeIdPrefix {
     /// assert_eq!(prefix.as_str(), "valid_prefix");
     /// ```
     #[must_use]
-    #[allow(clippy::missing_const_for_fn)]
-    pub fn as_str(&self) -> &str {
-        &self.0
+    pub const fn as_str(&self) -> &str {
+        self.0.as_str()
     }
 }
 

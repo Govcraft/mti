@@ -4,7 +4,7 @@ use std::fmt;
 ///
 /// This enum encapsulates various error conditions that may arise when validating
 /// a `TypeID` prefix according to the `TypeID` specification.
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ValidationError {
     /// The input exceeds the maximum allowed length of 63 characters.
     ExceedsMaxLength,

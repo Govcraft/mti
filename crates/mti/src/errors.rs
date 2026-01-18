@@ -15,7 +15,7 @@ use tracing::{error, instrument};
 ///
 /// This enum encapsulates errors from both the prefix and suffix components
 /// of a `MagicTypeId`, allowing for more specific error handling.
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum MagicTypeIdError {
     /// Errors related to the `TypeID` prefix.
     ///

@@ -253,9 +253,8 @@ impl MagicTypeId {
     /// assert_eq!(type_id.as_str(), "user_01h455vb4pex5vsknk084sn02q");
     /// ```
     #[must_use]
-    #[allow(clippy::missing_const_for_fn)]
-    pub fn as_str(&self) -> &str {
-        &self.string_repr
+    pub const fn as_str(&self) -> &str {
+        self.string_repr.as_str()
     }
 }
 
