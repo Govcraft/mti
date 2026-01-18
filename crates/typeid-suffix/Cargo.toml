@@ -1,6 +1,6 @@
 [package]
 name = "typeid_suffix"
-version = "1.2.0"
+version = "1.3.0"
 edition.workspace = true
 authors.workspace = true
 description = "A Rust library that implements the UUID suffix part of the `TypeId` Specification"

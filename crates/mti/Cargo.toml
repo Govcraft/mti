@@ -1,6 +1,6 @@
 [package]
 name = "mti"
-version = "1.0.0"
+version = "1.1.0"
 edition.workspace = true
 authors.workspace = true
 description = "Generates human-readable, prefixed, and globally unique identifiers (based on the TypeID spec) for Rust. Improves clarity, type-safety, debugging, and identifier management in your applications."
