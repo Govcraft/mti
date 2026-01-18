@@ -16,8 +16,8 @@ repository = "https://github.com/GovCraft/mti"
 # Shared dependencies - use workspace = true in member crates
 [workspace.dependencies]
 # Internal workspace crates
-typeid_prefix = { path = "crates/typeid-prefix" }
-typeid_suffix = { path = "crates/typeid-suffix" }
+typeid_prefix = { version = "1.0.5", path = "crates/typeid-prefix" }
+typeid_suffix = { version = "1.3.0", path = "crates/typeid-suffix" }
 
 # External dependencies
 uuid = { version = "1.10", features = ["v1", "v3", "v4", "v5", "v6", "v7"] }
