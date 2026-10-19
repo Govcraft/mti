@@ -271,7 +271,7 @@ mod tests {
 
         let no_prefix = "01h455vb4pex5vsknk084sn02q";
         assert_eq!(no_prefix.prefix_str().unwrap(), "");
-        assert!(no_prefix.prefix_str().unwrap().is_empty());
+        assert_eq!(no_prefix.prefix_str().unwrap(), "");
         assert_eq!(no_prefix.uuid_str().unwrap().len(), 36);
 
         let invalid_prefix = "Invalid_Prefix_01h455vb4pex5vsknk084sn02q";

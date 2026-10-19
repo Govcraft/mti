@@ -40,7 +40,7 @@ mod tests {
         // Test with a string containing only a suffix
         let suffix_only = "01h455vb4pex5vsknk084sn02q";
         assert_eq!(suffix_only.prefix_str().unwrap(), "");
-        assert!(suffix_only.prefix_str().unwrap().is_empty());
+        assert_eq!(suffix_only.prefix_str().unwrap(), "");
         assert_eq!(suffix_only.suffix_str().unwrap().len(), 26);
         assert_eq!(suffix_only.uuid_str().unwrap().len(), 36);
 

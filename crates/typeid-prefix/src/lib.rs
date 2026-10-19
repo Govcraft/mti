@@ -270,7 +270,7 @@ mod tests {
     fn test_clean_inner_only_underscores() {
         // This would have panicked before the fix
         let sanitized = "___".create_prefix_sanitized();
-        assert!(sanitized.as_str().is_empty());
+        assert_eq!(sanitized.as_str(), "");
     }
 
     #[test]
@@ -278,7 +278,7 @@ mod tests {
         // This would have panicked before the fix if it contained only underscores
         // after filtering invalid characters
         let sanitized = "123_456".create_prefix_sanitized();
-        assert!(sanitized.as_str().is_empty());
+        assert_eq!(sanitized.as_str(), "");
     }
 
     #[test]
@@ -286,7 +286,7 @@ mod tests {
         // This would have panicked before the fix because after filtering,
         // only underscores remain, which are then stripped
         let sanitized = "123_456_789".create_prefix_sanitized();
-        assert!(sanitized.as_str().is_empty());
+        assert_eq!(sanitized.as_str(), "");
     }
 
     #[test]

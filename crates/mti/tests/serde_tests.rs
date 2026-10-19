@@ -54,7 +54,7 @@ fn test_serialize_deserialize_without_prefix() {
 
     // Verify it matches the original
     assert_eq!(deserialized, magic_id);
-    assert!(deserialized.prefix().as_str().is_empty());
+    assert_eq!(deserialized.prefix().as_str(), "");
     assert_eq!(
         deserialized.suffix().to_string(),
         "00000000000000000000000000"
