@@ -11,12 +11,16 @@
 //! [TypeID Specification](https://github.com/jetpack-io/typeid).
 //!
 //! The main type provided by this crate is [`TypeIdPrefix`], which represents a valid
-//! `TypeID` prefix. This type ensures that all instances conform to the `TypeID` specification:
+//! `TypeID` prefix. Parsing validates non-empty prefixes with these rules:
 //!
 //! - Maximum length of 63 characters
 //! - Contains only lowercase ASCII letters and underscores
 //! - Does not start or end with an underscore
 //! - Starts and ends with a lowercase letter
+//!
+//! Parsing rejects empty input. [`TypeIdPrefix::default()`] and sanitization with
+//! no remaining valid characters produce an empty prefix instead. The optional
+//! `arbitrary` feature can generate values without validation.
 //!
 //! ## Features
 //!
@@ -47,8 +51,8 @@
 //!
 //! ## Optional Tracing
 //!
-//! When the `instrument` feature is enabled, the crate will log validation errors
-//! using the `tracing` crate.
+//! When the `instrument` feature is enabled, sanitization logs a warning through
+//! `tracing` when it falls back to an empty prefix.
 
 pub use type_id_prefix::TypeIdPrefix;
 
@@ -71,6 +75,10 @@ pub mod prelude {
     pub use crate::traits::{PrefixFactory, Validate};
     pub use crate::{TypeIdPrefix, ValidationError};
 }
+
+#[cfg(doctest)]
+#[doc = include_str!("../README.md")]
+mod readme {}
 
 #[cfg(test)]
 mod tests {

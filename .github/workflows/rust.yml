@@ -24,7 +24,19 @@ jobs:
         run: cargo check --workspace --all-features
 
   test:
-    name: Test
+    name: Test (${{ matrix.configuration }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - configuration: default
+            features: ""
+          - configuration: serde
+            features: "--features serde"
+          - configuration: instrument
+            features: "--features instrument"
+          - configuration: all
+            features: "--all-features"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -33,9 +45,12 @@ jobs:
       - name: Install cargo-nextest
         uses: taiki-e/install-action@nextest
       - name: Run tests
-        run: cargo nextest run --workspace --all-features
+        run: cargo nextest run --workspace ${{ matrix.features }}
       - name: Run doctests
-        run: cargo test --workspace --doc --all-features
+        run: cargo test --workspace --doc ${{ matrix.features }}
+      - name: Test workspace README
+        if: matrix.configuration == 'default'
+        run: python3 scripts/check-workspace-readme.py
 
   clippy:
     name: Clippy
@@ -47,7 +62,7 @@ jobs:
         with:
           components: clippy
       - name: Clippy check
-        run: cargo clippy --workspace --all-features -- -D warnings
+        run: cargo clippy --workspace --all-targets --all-features -- -D warnings
 
   fmt:
     name: Format
@@ -72,3 +87,31 @@ jobs:
         env:
           RUSTDOCFLAGS: -D warnings
         run: cargo doc --workspace --no-deps --all-features
+
+  compatibility:
+    name: Published API compatibility
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+      - name: Install cargo-semver-checks
+        uses: taiki-e/install-action@cargo-semver-checks
+      - name: Compare with published releases
+        run: |
+          cargo semver-checks -p mti --baseline-version 1.1.1 --all-features
+          cargo semver-checks -p typeid_prefix --baseline-version 1.2.1 --all-features
+          cargo semver-checks -p typeid_suffix --baseline-version 1.3.0 --all-features
+
+  package:
+    name: Verify published packages
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+      - name: Package and verify each crate
+        run: |
+          cargo package -p typeid_prefix --all-features
+          cargo package -p typeid_suffix --all-features
+          cargo package -p mti --all-features

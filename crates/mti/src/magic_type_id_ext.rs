@@ -203,9 +203,9 @@ pub trait MagicTypeIdExt {
     ///
     /// This method sanitizes the input string to ensure a valid prefix is created. The sanitization process:
     /// - Converts the input to lowercase.
+    /// - Keeps at most the first 63 characters before filtering.
     /// - Removes all characters that are not lowercase ASCII letters or underscores.
     /// - Trims leading and trailing underscores.
-    /// - Truncates the result to a maximum of 63 characters.
     /// - If the result is empty after sanitization, it returns an empty prefix (which is valid).
     ///
     /// # Type Parameters
@@ -240,9 +240,9 @@ pub trait MagicTypeIdExt {
     ///
     /// This method sanitizes the input string to ensure a valid prefix is created. The sanitization process:
     /// - Converts the input to lowercase.
+    /// - Keeps at most the first 63 characters before filtering.
     /// - Removes all characters that are not lowercase ASCII letters or underscores.
     /// - Trims leading and trailing underscores.
-    /// - Truncates the result to a maximum of 63 characters.
     /// - If the result is empty after sanitization, it returns an empty prefix (which is valid).
     ///
     /// # Parameters

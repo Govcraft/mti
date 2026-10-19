@@ -2,11 +2,11 @@
 
 [![Crates.io](https://img.shields.io/crates/v/mti.svg)](https://crates.io/crates/mti)
 [![Documentation](https://docs.rs/mti/badge.svg)](https://docs.rs/mti)
-[![License: MIT OR Apache-2.0](https://img.shields.io/badge/License-MIT%20OR%20Apache--2.0-blue.svg)](LICENSE)
+[![License: MIT OR Apache-2.0](https://img.shields.io/badge/License-MIT%20OR%20Apache--2.0-blue.svg)](https://github.com/Govcraft/mti#license)
 [![GitHub stars](https://img.shields.io/github/stars/GovCraft/mti.svg?style=social&label=Star)](https://github.com/GovCraft/mti)
 
 Are you looking for a better way to handle identifiers in your Rust applications? Do opaque UUIDs make your logs, databases, and APIs harder to understand? Magic Type ID (MTI) offers a solution.
-It provides identifiers that look like `user_01h455vb4pex5vsknk084sn02q` or `order_01h455vb4pex5vsknk084sn02q` – combining a human-readable prefix indicating the type of entity with a globally unique, sortable (by default) suffix. This approach, inspired by conventions like Stripe's API IDs, offers immediate clarity.
+It provides identifiers that look like `user_01h455vb4pex5vsknk084sn02q` or `order_01h455vb4pex5vsknk084sn02q` – combining a human-readable prefix indicating the type of entity with a globally unique, sortable when generated with UUIDv7 suffix. This approach, inspired by conventions like Stripe's API IDs, offers immediate clarity.
 
 `mti` is a Rust crate that provides **type-safe, human-readable, and globally unique identifiers**. Based on the [TypeID Specification](https://github.com/jetify-com/typeid), MTI enhances UUIDs with descriptive prefixes. This improves debuggability, code reliability, and simplifies identifier management in various applications.
 
@@ -23,7 +23,7 @@ MTI addresses common challenges developers encounter with traditional identifier
 *   **Problem: Ensuring ID Uniqueness and Integrity.**
     *   **MTI Solution:** Provides a standardized, globally unique, and self-descriptive ID format that simplifies data integrity across different parts of an application or between systems.
 *   **Problem: Complex ID Generation & Sorting.**
-    *   **MTI Solution:** Offers an intuitive API for generating various UUID versions (including time-sortable UUIDv7 by default), abstracting the complexities of UUID generation and ensuring consistency.
+    *   **MTI Solution:** Offers an intuitive API for generating various UUID versions (including explicit selection of time-sortable UUIDv7), abstracting the complexities of UUID generation and ensuring consistency.
 
 **Key Benefits for Developers:**
 
@@ -40,8 +40,8 @@ MTI addresses common challenges developers encounter with traditional identifier
 
 MTI supports several UUID versions, each with distinct characteristics and advantages. The choice of UUID version impacts properties like sortability and determinism:
 
-*   **UUIDv7 (Time-Ordered - Default for new IDs):**
-    *   **How it works:** Combines a high-precision Unix timestamp (usually milliseconds) with random bits to ensure uniqueness.
+*   **UUIDv7 (Time-Ordered):**
+    *   **How it works:** Combines a millisecond Unix timestamp with additional bits used for uniqueness.
     *   **Advantages:**
         *   **Sortable by Time:** IDs are k-sortable by creation time, which is beneficial for database indexing (improving insert performance for clustered indexes) and for ordering records chronologically (e.g., event logs, audit trails).
         *   Globally unique.
@@ -60,10 +60,10 @@ MTI supports several UUID versions, each with distinct characteristics and advan
     *   **Advantages:**
         *   **Deterministic:** Useful when you need to consistently derive the same ID for the same input, e.g., for content-addressable storage or identifying resources by a unique name.
         *   Globally unique within the combination of namespace and name.
-    *   **Disadvantages:** Relies on SHA-1 (though for collision resistance in UUIDs, it's generally considered acceptable). Not time-sortable.
+    *   **Disadvantages:** Not time-sortable. Do not use UUIDv5 as a cryptographic content-integrity check.
     *   **Use Cases:** Generating stable identifiers for files based on their content, deriving IDs for entities based on unique business keys, de-duplication.
 
-MTI defaults to UUIDv7 for `create_type_id()` due to its excellent balance of global uniqueness and time-sortability, which covers a wide range of common application needs. You can explicitly choose other versions when specific characteristics are required.
+`create_type_id` requires an explicit UUID version: use `create_type_id::<V7>()` for time-sortable IDs or `create_type_id::<V4>()` for random IDs. The `Default` bound on the generic type does not choose a version for you. `TypeIdSuffix::default()` does generate a V7 suffix.
 Beyond V4, V5, and V7, which are commonly used and detailed above, the underlying `typeid_suffix` crate (and thus MTI through manual construction with `TypeIdSuffix::new::<V>()` and `MagicTypeId::new()`) also supports other standard UUID versions. These include `Nil` (for all-zero UUIDs), `V1` (traditional time-based), `V3` (name-based using MD5), and `V6` (another time-based variant). While these versions are available for specific needs, V7 is generally recommended for new time-based requirements, and V5 for SHA-1 based named requirements, due to their modern advantages.
 
 ## Quick Start
@@ -72,7 +72,7 @@ Add `mti` to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-mti = "1.0" # Or the latest version
+mti = "1.1"
 ```
 
 **Optional Serde Support:**
@@ -81,7 +81,7 @@ If you need to serialize or deserialize `MagicTypeId` instances (e.g., for use w
 
 ```toml
 [dependencies]
-mti = { version = "1.0", features = ["serde"] } # Or the latest version, ensure to match the version above
+mti = { version = "1.1", features = ["serde"] } # Or the latest version, ensure to match the version above
 ```
 This will enable Serde's `Serialize` and `Deserialize` traits for `MagicTypeId`.
 
@@ -93,7 +93,7 @@ To enable this feature, add `instrument` to the `features` list in your `Cargo.t
 
 ```toml
 [dependencies]
-mti = { version = "1.0", features = ["instrument"] } # Or your current version
+mti = { version = "1.1", features = ["instrument"] } # Or your current version
 
 # Your application will also need a tracing subscriber
 tracing = "0.1" # The tracing facade
@@ -104,49 +104,25 @@ tracing-subscriber = { version = "0.3", features = ["fmt"] } # Example subscribe
 
 When the `instrument` feature is active, `mti` functions are annotated with `#[instrument(...)]` and contain `trace!`, `debug!`, etc., calls from the `tracing` crate. Your application can then configure a `tracing` subscriber (like `tracing-subscriber`) to collect, filter, format, and output these trace events. This gives you control over the level of detail and destination of the trace data (e.g., console, file, or a distributed tracing system).
 
-*Example of setting up a basic subscriber in your application:*
-
-```rust
-// In your application's main.rs or initialization code:
-use tracing_subscriber::fmt::format::FmtSpan;
-use mti::prelude::*; // For create_type_id and MagicTypeId
-
-fn setup_tracing() {
-    tracing_subscriber::fmt()
-        .with_max_level(tracing::Level::DEBUG) // Adjust level as needed (TRACE, DEBUG, INFO, etc.)
-        .with_span_events(FmtSpan::CLOSE)      // Configure span event reporting
-        .init();                               // Initialize the global subscriber
-}
-
-fn main() {
-    setup_tracing(); // Call this early in your application
-
-    // Operations in mti will now emit traces if the "instrument" feature is enabled
-    let product_id = "product".create_type_id::<V7>(); // This will be traced
-    println!("Product ID: {}", product_id);
-
-    match MagicTypeId::from_str("test_01h2xcejqg4wh1r27hsdgzeqp4") { // This parsing will be traced
-        Ok(id) => println!("Parsed ID: {}", id),
-        Err(e) => eprintln!("Error parsing ID: {}", e),
-    }
-}
-```
-This setup allows the host application to effectively leverage the instrumentation within `mti`.
+Configure the subscriber in your application before creating or parsing IDs.
+The `instrument` feature emits events but does not install a subscriber.
+See the [tracing-subscriber documentation](https://docs.rs/tracing-subscriber) for
+subscriber configuration. No subscriber is required to use MTI.
 
 Then, in your Rust code:
 
 ```rust
 use mti::prelude::*;
 
-// Create a MagicTypeId for a user (defaults to UUIDv7)
-let user_id = "user".create_type_id();
+// Choose UUIDv7 explicitly
+let user_id = "user".create_type_id::<V7>();
 println!("New User ID: {}", user_id); // e.g., "user_01h455vb4pex5vsknk084sn02q"
 
 // Parse an existing MagicTypeId
 let order_id_str = "order_01h455vb4pex5vsknk084sn02q";
 match MagicTypeId::from_str(order_id_str) {
     Ok(order_id) => {
-        assert_eq!(order_id.prefix_str(), "order");
+        assert_eq!(order_id.prefix().as_str(), "order");
         println!("Parsed Order ID: {}", order_id);
     }
     Err(e) => {
@@ -161,7 +137,7 @@ match MagicTypeId::from_str(order_id_str) {
     *   *Benefit:* Helps prevent accidental misuse of IDs, making your system more robust.
 *   **Human-Readable Identifiers**: Prefixes make IDs self-descriptive and easy to understand at a glance.
     *   *Benefit:* Aids in debugging, log analysis, and database inspection.
-*   **UUID-Backed Uniqueness**: Utilizes various UUID versions (V4, V5, V7) for global uniqueness. UUIDv7 is the default for new ID generation. (See "Understanding UUID Versions in MTI" above for details).
+*   **UUID-Backed Uniqueness**: Utilizes various UUID versions (V4, V5, V7) for global uniqueness. Select UUIDv7 explicitly with `create_type_id::<V7>()`. (See "Understanding UUID Versions in MTI" above for details).
     *   *Benefit:* Helps eliminate ID collisions.
 *   **Time-Sortable (with UUIDv7)**: Identifiers generated with UUIDv7 are inherently sortable by time.
     *   *Benefit:* Simplifies ordering of events, records, and logs chronologically.
@@ -184,12 +160,10 @@ match MagicTypeId::from_str(order_id_str) {
 
 ```rust
 use mti::prelude::*;
-use uuid::Uuid; // For UUIDv5 example
+// Uuid is re-exported by mti::prelude.
 
-// Create with UUIDv7 (sortable, recommended default)
-let product_id_v7 = "product".create_type_id(); // V7 is default
-// Or be explicit:
-let explicit_product_id_v7 = "product".create_type_id::<V7>();
+// Create with UUIDv7 (time-sortable)
+let product_id_v7 = "product".create_type_id::<V7>();
 println!("Product ID (UUIDv7): {}", product_id_v7);
 
 // Create with UUIDv4 (random)
@@ -206,7 +180,7 @@ let generated_v5_uuid = Uuid::new_v5(&namespace_uuid, name_to_identify.as_bytes(
 
 // 2. Create the TypeIdPrefix (can be sanitized or strict)
 // Using sanitized prefix creation for this example:
-let type_id_prefix_v5 = TypeIdPrefix::create_sanitized(prefix_for_v5);
+let type_id_prefix_v5 = prefix_for_v5.create_prefix_sanitized();
 //    Alternatively, for a strict prefix (will error if prefix_for_v5 is invalid):
 //    let type_id_prefix_v5 = TypeIdPrefix::try_from(prefix_for_v5).expect("Prefix should be valid");
 
@@ -232,9 +206,9 @@ println!("Order ID (custom suffix): {}", order_id_custom);
 use mti::prelude::*;
 
 // Sanitized creation (attempts to produce a valid prefix from potentially invalid input)
-let sanitized_id = "Invalid Prefix!".create_type_id(); // Defaults to V7
+let sanitized_id = "Invalid Prefix!".create_type_id::<V7>();
 assert!(sanitized_id.to_string().starts_with("invalidprefix_"));
-assert_eq!(sanitized_id.prefix_str(), "invalidprefix");
+assert_eq!(sanitized_id.prefix().as_str(), "invalidprefix");
 
 // Strict creation (returns an error for invalid prefixes)
 let result = "Invalid Prefix!".try_create_type_id::<V7>();
@@ -247,9 +221,9 @@ println!("Error for invalid prefix: {:?}", result.err());
 ```rust
 use mti::prelude::*;
 
-let id = "user".create_type_id(); // Defaults to V7
+let id = "user".create_type_id::<V7>();
 assert!(id.starts_with("user_"));
-assert_eq!(id.prefix_str(), "user");
+assert_eq!(id.prefix().as_str(), "user");
 // Length can vary slightly based on prefix length, but suffix is fixed for a given UUID version's encoding.
 // For a 4-char prefix and standard TypeID base32 encoding of a 128-bit UUID:
 // Prefix (4) + Underscore (1) + Suffix (26 for V7/V4) = 31 characters
@@ -267,8 +241,8 @@ use mti::prelude::*;
 let id_str = "product_01h455vb4pex5vsknk084sn02q";
 let magic_id = MagicTypeId::from_str(id_str).unwrap();
 
-assert_eq!(magic_id.prefix_str(), "product");
-assert_eq!(magic_id.suffix_str(), "01h455vb4pex5vsknk084sn02q");
+assert_eq!(magic_id.prefix().as_str(), "product");
+assert_eq!(magic_id.suffix().as_ref(), "01h455vb4pex5vsknk084sn02q");
 
 // Extract UUID
 // You can get the underlying `uuid::Uuid` by accessing the suffix:
@@ -293,25 +267,38 @@ if let Ok(direct_uuid_str) = direct_uuid_str_res {
 // You can check its version if needed
 // println!("UUID Version: {:?}", uuid_val.get_version());
 ```
+`prefix_str()` and `suffix_str()` come from the string extension trait and
+return `Result<String, MagicTypeIdError>`, even when reached through a
+`MagicTypeId`. For an already parsed ID, use `prefix().as_str()` and
+`suffix().as_ref()` to borrow its components without reparsing or allocating.
+
+```rust
+use mti::prelude::*;
+
+let text = "user_01h455vb4pex5vsknk084sn02q";
+assert_eq!(text.prefix_str()?, "user");
+assert_eq!(text.suffix_str()?, "01h455vb4pex5vsknk084sn02q");
+# Ok::<(), MagicTypeIdError>(())
+```
+
 ### Sorting
-When `MagicTypeId` is created with a `V7` UUID, it provides a natural sorting order:
-1. **Primary Sorting**: By the timestamp in the `UUIDv7` suffix. This means that identifiers
-   generated later will appear after those generated earlier.
-2. **Secondary Sorting**: If the timestamps are equal (unlikely with UUIDv7's millisecond precision and random bits), then sorting is based on the lexicographical order
-   of the prefix. This ensures consistent ordering.
+`MagicTypeId` orders by the entire UUID suffix first, then by prefix only when
+suffixes are identical. For V7, the timestamp is the leading part of the suffix;
+IDs sharing a timestamp are still ordered by the remaining UUID bits before the
+prefix. Clock differences across machines can affect chronological ordering.
+Sorting the string representations instead orders by prefix first.
+
 ```rust
 use std::str::FromStr;
 use std::thread::sleep;
 use std::time::Duration;
 
 use mti::prelude::*;
-use typeid_prefix::TypeIdPrefix; // Specific import for clarity
-use typeid_suffix::TypeIdSuffix; // Specific import for clarity
 
 let prefix1 = TypeIdPrefix::from_str("user").unwrap();
 let prefix2 = TypeIdPrefix::from_str("admin").unwrap();
 
-// Generate with default V7
+// Generate with V7
 let id1 = MagicTypeId::new(prefix1.clone(), TypeIdSuffix::new::<V7>());
 
 sleep(Duration::from_millis(10));  // Ensure different timestamps
@@ -324,11 +311,9 @@ let id3 = MagicTypeId::new(prefix2.clone(), id3_suffix_val);
 
 assert!(id1 < id2, "Expected id1 ({}) to be less than id2 ({}) due to earlier timestamp", id1, id2);
 
-// For secondary sort demonstration, ensure suffixes are identical if timestamps were hypothetically the same
-// In practice, UUIDv7 makes identical timestamps + random bits extremely rare.
-// Here, we explicitly made id3's suffix same as id2's for this test.
-assert_eq!(id2.suffix_str(), id3.suffix_str(), "Suffixes for id2 and id3 should be the same for this test case");
-assert!(id3 < id2, "Expected id3 ({}) to be less than id2 ({}) due to lexicographically smaller prefix ('admin' < 'user') when timestamps (and thus suffixes) are equal", id3, id2);
+// The prefix breaks ties only when the entire suffix is identical.
+assert_eq!(id2.suffix().as_ref(), id3.suffix().as_ref(), "Suffixes for id2 and id3 should be the same for this test case");
+assert!(id3 < id2, "Expected id3 ({}) to be less than id2 ({}) due to lexicographically smaller prefix ('admin' < 'user') when suffixes are equal", id3, id2);
 ```
 
 ## Use Cases: Where MTI Shines
@@ -339,7 +324,7 @@ MagicTypeId is versatile and improves clarity and safety in various scenarios:
     *Why it helps:* Reduces ambiguity when correlating events or entities.
     ```rust
     # use mti::prelude::*;
-    let order_id = "order".create_type_id();
+    let order_id = "order".create_type_id::<V7>();
     // Send to another component/service: e.g., "order_01h455vb4pex5vsknk084sn02q"
     // The receiving part immediately knows it's an order ID.
     println!("Order ID for processing: {}", order_id);
@@ -353,30 +338,18 @@ MagicTypeId is versatile and improves clarity and safety in various scenarios:
     # struct DummyDb; impl Db for DummyDb { fn insert_user(&self, id: MagicTypeId, name: &str) { println!("Inserting user {} with id {}", name, id); } }
     # let db = DummyDb;
     # let user_data = "Alice";
-    let user_id = "user".create_type_id();
+    let user_id = "user".create_type_id::<V7>();
     // MagicTypeIds can be stored as strings in most databases
     db.insert_user(user_id, user_data);
     ```
 3.  **API Development (REST/GraphQL)**: Use as clear, self-documenting resource identifiers in your API endpoints and payloads.
     *Why it helps:* Improves API ergonomics for both producers and consumers.
     ```rust
-    # use mti::prelude::*;
-    # #[cfg(feature = "actix_web")] // Example, not a real feature here
-    # use actix_web::{get, web::Path, Responder, HttpResponse};
-    # #[cfg(feature = "actix_web")]
-    # async fn get_user_handler(id: Path<MagicTypeId>) -> impl Responder {
-    #     // Ensure the prefix is 'user' if needed, or handle generically
-    #     if id.prefix_str() == "user" {
-    #         println!("Fetching user with ID: {}", *id);
-    #         HttpResponse::Ok().body(format!("User data for {}", *id))
-    #     } else {
-    #         HttpResponse::BadRequest().body("Invalid ID type for user endpoint")
-    #     }
-    # }
-    // Example (conceptual, actual web framework integration may vary):
-    // #[get("/users/{id}")]
-    // async fn get_user(id: Path<MagicTypeId>) -> impl Responder { /* ... */ }
-    println!("API endpoint might look like: /users/user_01h455vb4pex5vsknk084sn02q");
+    use mti::prelude::*;
+
+    let user_id = "user".create_type_id::<V7>();
+    let path = format!("/users/{user_id}");
+    assert!(path.starts_with("/users/user_"));
     ```
 4.  **Logging and Tracing**: Embed type information directly in log entries for improved debugging and event correlation.
     *Why it helps:* Quickly filter and understand logs related to specific entity types.
@@ -385,19 +358,18 @@ MagicTypeId is versatile and improves clarity and safety in various scenarios:
     # fn process_order(order_id: MagicTypeId) {
     #     // Simulate logging
     #     println!("[INFO] Processing order {}", order_id);
-    #     if order_id.prefix_str() != "order" {
+    #     if order_id.prefix().as_str() != "order" {
     #         eprintln!("[WARN] Expected an order ID, but got: {}", order_id);
     #     }
     # }
-    let order_id = "order".create_type_id();
+    let order_id = "order".create_type_id::<V7>();
     process_order(order_id);
-    // log::info!("Processing order {}", "order".create_type_id());
+    // log::info!("Processing order {}", "order".create_type_id::<V7>());
     ```
 5.  **Content-Addressable Storage (with UUIDv5)**: Generate deterministic, repeatable IDs based on content or unique names within a namespace. (See "Understanding UUID Versions in MTI" for more on UUIDv5).
     *Why it helps:* Useful for de-duplication or creating stable identifiers for specific data.
     ```rust
     # use mti::prelude::*; // Brings in MagicTypeId, TypeIdPrefix, TypeIdSuffix, etc.
-    # use uuid::Uuid;    // For Uuid::new_v5 and Uuid::parse_str
 
     let prefix_str = "domain";
     let namespace = Uuid::parse_str("6ba7b810-9dad-11d1-80b4-00c04fd430c8").unwrap(); // Example namespace
@@ -407,7 +379,7 @@ MagicTypeId is versatile and improves clarity and safety in various scenarios:
     let v5_uuid = Uuid::new_v5(&namespace, name.as_bytes());
 
     // 2. Create TypeIdPrefix
-    let type_prefix = TypeIdPrefix::create_sanitized(prefix_str);
+    let type_prefix = prefix_str.create_prefix_sanitized();
     //    Or for a strict prefix:
     //    let type_prefix = TypeIdPrefix::try_from(prefix_str).unwrap();
 
@@ -428,60 +400,88 @@ For stronger compile-time guarantees, wrap `MagicTypeId` in your own domain-spec
 
 ```rust
 use mti::prelude::*;
-use std::str::FromStr;
+use std::{error::Error, fmt};
 
-#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash)] // Add necessary derives
+#[derive(Debug, Clone, PartialEq, Eq)]
 struct UserId(MagicTypeId);
 
-impl UserId {
-    fn new() -> Self {
-        // Enforce "user" prefix at construction
-        Self("user".create_type_id())
-    }
+#[derive(Debug, Clone, PartialEq, Eq)]
+enum UserIdError {
+    InvalidTypeId(MagicTypeIdError),
+    UnexpectedPrefix { actual: String },
+}
 
-    // Optional: Expose the inner MagicTypeId or its parts if needed
-    fn as_magic_type_id(&self) -> &MagicTypeId {
-        &self.0
-    }
-
-    // Optional: Implement FromStr for UserId
-    fn from_str_validated(s: &str) -> Result<Self, MagicTypeIdError> { // Corrected MTIError to MagicTypeIdError
-        let mti = MagicTypeId::from_str(s)?;
-        if mti.prefix_str() != "user" {
-            Err(MagicTypeIdError::Validation("Invalid prefix for UserId, expected 'user'".to_string()))
-        } else {
-            Ok(UserId(mti))
+impl fmt::Display for UserIdError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::InvalidTypeId(error) => write!(f, "Invalid TypeID: {error}"),
+            Self::UnexpectedPrefix { actual } => {
+                write!(f, "Expected '{}' prefix, got '{actual}'", UserId::PREFIX)
+            }
         }
     }
 }
 
-// Implement Display, Serialize, Deserialize etc. as needed, often by delegating to self.0
-
-#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
-struct OrderId(MagicTypeId);
-
-impl OrderId {
-    fn new() -> Self {
-        Self("order".create_type_id())
+impl Error for UserIdError {
+    fn source(&self) -> Option<&(dyn Error + 'static)> {
+        match self {
+            Self::InvalidTypeId(error) => Some(error),
+            Self::UnexpectedPrefix { .. } => None,
+        }
     }
-    // ... similar helper methods
 }
 
-// Now, your functions can demand specific ID types:
-fn process_user(id: UserId) {
-    println!("Processing user with ID: {}", id.as_magic_type_id());
-}
+impl UserId {
+    const PREFIX: &str = "user";
 
-fn process_order(id: OrderId) { /* ... */ }
+    fn new() -> Self {
+        Self(Self::PREFIX.create_type_id::<V7>())
+    }
+
+    fn parse(s: &str) -> Result<Self, UserIdError> {
+        let id = MagicTypeId::from_str(s).map_err(UserIdError::InvalidTypeId)?;
+        if id.prefix().as_str() != Self::PREFIX {
+            return Err(UserIdError::UnexpectedPrefix {
+                actual: id.prefix().as_str().to_owned(),
+            });
+        }
+        Ok(Self(id))
+    }
+}
 
 let user_id = UserId::new();
-let order_id = OrderId::new();
+assert_eq!(UserId::parse(user_id.0.as_str()).unwrap(), user_id);
+assert!(matches!(
+    UserId::parse("order_01h455vb4pex5vsknk084sn02q"),
+    Err(UserIdError::UnexpectedPrefix { actual }) if actual == "order"
+));
+assert!(matches!(
+    UserId::parse("01h455vb4pex5vsknk084sn02q"),
+    Err(UserIdError::UnexpectedPrefix { actual }) if actual.is_empty()
+));
+assert!(matches!(
+    UserId::parse("user_invalid"),
+    Err(UserIdError::InvalidTypeId(_))
+));
+```
 
-process_user(user_id);
-process_order(order_id);
+`MagicTypeIdError` describes format errors. A valid `order` prefix is an
+application-level mismatch for `UserId`, so the wrapper uses its own error type.
+Keep the wrapped field private and validate every construction path, including
+any custom deserializer you add.
 
-// This would now cause a compile-time error, preventing accidental misuse!
-// process_user(order_id);
+Different wrapper types also prevent accidental mixing at compile time:
+
+```compile_fail,E0308
+use mti::prelude::*;
+
+struct UserId(MagicTypeId);
+struct OrderId(MagicTypeId);
+
+fn process_user(id: UserId) {}
+
+let order = OrderId("order".create_type_id::<V7>());
+process_user(order); // Expected UserId, found OrderId.
 ```
 
 ## Performance and Safety
@@ -521,6 +521,6 @@ I'm [@rrrodzilla](https://github.com/rrrodzilla), a technologist with industry e
 For more information, visit [https://www.govcraft.ai](https://www.govcraft.ai)
 ## Sponsor
 
-Govcraft is a one-person shop—no corporate backing, no investors, just me building useful tools. If this project helps you, [sponsoring](https://github.com/sponsors/Govcraft) keeps the work going.
+Govcraft is a one-person shop, no corporate backing, no investors, just me building useful tools. If this project helps you, [sponsoring](https://github.com/sponsors/Govcraft) keeps the work going.
 
 [![Sponsor on GitHub](https://img.shields.io/badge/Sponsor-%E2%9D%A4-%23db61a2?logo=GitHub)](https://github.com/sponsors/Govcraft)

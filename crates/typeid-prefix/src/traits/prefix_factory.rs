@@ -2,10 +2,10 @@ use std::str::FromStr;
 
 use crate::{TypeIdPrefix, ValidationError};
 
-/// A trait for creating valid `TypeIdPrefix`s from a given input.
+/// A trait for parsing or sanitizing `TypeIdPrefix` values from input.
 ///
 /// This trait is implemented for any type that can be converted to a string slice (`AsRef<str>`).
-/// It provides a method to clean and create a valid `TypeIdPrefix`, even from invalid input as well as a fallible creation method.
+/// It provides fallible parsing and sanitization that falls back to an empty prefix.
 ///
 /// # Examples
 ///
@@ -16,13 +16,13 @@ use crate::{TypeIdPrefix, ValidationError};
 /// assert_eq!(sanitized.as_str(), "invalidstring");
 /// ```
 pub trait PrefixFactory {
-    /// Sanitizes the input and creates a valid `TypeIdPrefix`.
+    /// Sanitizes the input, returning an empty prefix if no valid prefix remains.
     ///
     /// This method will modify the input to conform to the `TypeID` specification by:
-    /// - Removing invalid characters
-    /// - Converting all characters to lowercase
-    /// - Truncating to the maximum allowed length if necessary
-    /// - Ensuring the result starts and ends with a lowercase alphabetic character
+    /// - Converting characters to lowercase
+    /// - Keeping at most the first 63 characters before filtering
+    /// - Removing characters other than ASCII lowercase letters and underscores
+    /// - Trimming leading and trailing underscores
     ///
     /// # Examples
     ///
@@ -79,6 +79,7 @@ pub trait PrefixFactory {
     /// This method will return a `ValidationError` if the input does not meet
     /// the requirements of a valid `TypeID` prefix. Possible error conditions include:
     ///
+    /// - The input is empty.
     /// - The input exceeds the maximum allowed length of 63 characters.
     /// - The input contains characters other than lowercase ASCII letters and underscores.
     /// - The input starts or ends with an underscore.

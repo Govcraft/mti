@@ -1,10 +1,10 @@
-# `TypeId`Suffix
+# `TypeID` Suffix
 
 [![Crates.io](https://img.shields.io/crates/v/typeid_suffix.svg)](https://crates.io/crates/typeid_suffix)
 [![Documentation](https://docs.rs/typeid_suffix/badge.svg)](https://docs.rs/typeid_suffix)
-[![License: MIT OR Apache-2.0](https://img.shields.io/badge/License-MIT%20OR%20Apache--2.0-blue.svg)](LICENSE)
+[![License: MIT OR Apache-2.0](https://img.shields.io/badge/License-MIT%20OR%20Apache--2.0-blue.svg)](https://github.com/Govcraft/mti#license)
 
-A Rust library that implements the suffix portion of the [TypeID Specification](https://github.com/jetpack-io/typeid). It provides functionality to work with `TypeId`suffixes, which are base32-encoded representations of UUIDs used in the `TypeId`system.
+A Rust library that implements the suffix portion of the [TypeID Specification](https://github.com/jetpack-io/typeid). It provides functionality to work with `TypeID` suffixes, which are base32-encoded representations of UUIDs used in the `TypeID` system.
 
 Combined with the [TypeIdPrefix crate](https://crates.io/crates/typeid_prefix) to comprise the [mti (Magic Type Id) crate](https://crates.io/crates/mti).
 
@@ -14,9 +14,9 @@ Use the [mti (Magic Type Id) crate](https://crates.io/crates/mti) for a holistic
 
 - **UUID Version Support**: Implements support for `UUIDv7` and other UUID versions.
 - **Flexible Architecture**: Generic implementation allows for handling various UUID versions.
-- **Base32 Encoding/Decoding**: Efficient encoding and decoding of UUIDs to/from base32 `TypeId`suffixes.
+- **Base32 Encoding/Decoding**: Efficient encoding and decoding of UUIDs to/from base32 `TypeID` suffixes.
 - **Error Handling**: Comprehensive error types for invalid suffixes and UUIDs.
-- **Validation**: Robust validation for `TypeId`suffixes and UUIDs.
+- **Validation**: Checks the 26-character suffix encoding, alphabet, and first-character limit. Parsing preserves UUID bits without restricting the UUID version or variant.
 - **Zero-cost Abstractions**: Designed to have minimal runtime overhead.
 - **Optional Tracing**: Integrates with the `tracing` crate for logging (optional feature `instrument`).
 - **Optional Serde Support**: Enables serialization and deserialization with `serde` (optional feature `serde`).
@@ -27,19 +27,21 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-typeid_suffix = "1.2.0"
+typeid_suffix = "1.3"
 ```
 
 To enable optional features:
 
 ```toml
 [dependencies]
-typeid_suffix = { version = "1.2.0", features = ["instrument", "serde"] }
+typeid_suffix = { version = "1.3", features = ["instrument", "serde"] }
 # Or select specific features, e.g., just serde:
-# typeid_suffix = { version = "1.2.0", features = ["serde"] }
+# typeid_suffix = { version = "1.3", features = ["serde"] }
 ```
 
 ## Usage
+
+The prelude re-exports `TypeIdSuffix`, UUID version types, and `Uuid`. Examples that import `uuid::Uuid` directly require `uuid = { version = "1", features = ["v4"] }` in your dependencies. `TypeIdSuffix::default()` uses V7; `TypeIdSuffix::new::<V4>()` explicitly selects another version.
 
 ### Basic Usage
 
@@ -51,20 +53,21 @@ use uuid::Uuid;
 fn main() {
     // Create a `TypeIdSuffix` from a `UUIDv7` (default)
     let suffix_v7 = TypeIdSuffix::default();
+    assert_eq!(suffix_v7.to_uuid().get_version(), Some(Version::SortRand));
     println!("TypeID suffix (v7 default): {}", suffix_v7);
 
     // Create a `TypeIdSuffix` from a specific UUID
     let uuid_v4 = Uuid::new_v4();
     let suffix_v4: TypeIdSuffix = uuid_v4.into();
+    assert_eq!(suffix_v4.to_uuid(), uuid_v4);
     println!("TypeID suffix (from v4): {}", suffix_v4);
 
     // Parse a `TypeIdSuffix` from a string
     let parsed_suffix = TypeIdSuffix::from_str("01h455vb4pex5vsknk084sn02q").expect("Valid suffix");
     
     // Convert back to a UUID
-    let recovered_uuid: Uuid = parsed_suffix.try_into().expect("Valid UUID");
-    // Note: We don't know the original UUID version from the suffix alone without context,
-    // but we can recover the UUID bytes.
+    let recovered_uuid: Uuid = parsed_suffix.into();
+    // UUID conversion preserves the version bits as well as the remaining bytes.
     println!("Recovered UUID from parsed suffix: {}", recovered_uuid);
 }
 ```
@@ -73,15 +76,13 @@ fn main() {
 
 ```rust
 use typeid_suffix::prelude::*;
-use uuid::Uuid;
 
 fn main() {
     // Creating a new suffix for a specific version (e.g., V4)
     let suffix_v4 = TypeIdSuffix::new::<V4>();
     println!("TypeID suffix for new UUIDv4: {}", suffix_v4);
 
-    let uuid_v1 = Uuid::new_v1([1,2,3,4,5,6]); // Example, requires v1 feature on uuid crate
-    let suffix_v1: TypeIdSuffix = uuid_v1.into();
+    let suffix_v1 = TypeIdSuffix::new::<V1>();
     println!("TypeID suffix for UUIDv1: {}", suffix_v1);
 }
 ```
@@ -95,17 +96,15 @@ use typeid_suffix::prelude::*;
 use std::str::FromStr;
 
 fn main() {
-    let result = TypeIdSuffix::from_str("invalid_suffix"); // Invalid length and characters
-    match result {
-        Ok(_) => println!("Valid suffix"),
-        Err(e) => println!("Invalid suffix: {}", e), // e.g., InvalidSuffix(InvalidLength)
-    }
-
-    let result_bad_first_char = TypeIdSuffix::from_str("81h455vb4pex5vsknk084sn02q"); // First char > '7'
-    match result_bad_first_char {
-        Ok(_) => println!("Valid suffix"),
-        Err(e) => println!("Invalid suffix: {}", e), // e.g., InvalidSuffix(InvalidFirstCharacter)
-    }
+    assert_eq!(
+        TypeIdSuffix::from_str("invalid_suffix"),
+        Err(DecodeError::InvalidSuffix(InvalidSuffixReason::InvalidLength))
+    );
+    // Exactly 26 characters, but the first character exceeds '7'.
+    assert_eq!(
+        TypeIdSuffix::from_str("80000000000000000000000000"),
+        Err(DecodeError::InvalidSuffix(InvalidSuffixReason::InvalidFirstCharacter))
+    );
 }
 ```
 
@@ -117,7 +116,7 @@ When the `instrument` feature is enabled, the crate will log operations using th
 
 ```toml
 [dependencies]
-typeid_suffix = { version = "1.2.0", features = ["instrument"] }
+typeid_suffix = { version = "1.3", features = ["instrument"] }
 ```
 
 ### Serde Support (`serde`)
@@ -130,7 +129,7 @@ To enable this feature:
 
 ```toml
 [dependencies]
-typeid_suffix = { version = "1.2.0", features = ["serde"] }
+typeid_suffix = { version = "1.3", features = ["serde"] }
 ```
 
 **Example:**
@@ -142,7 +141,7 @@ use typeid_suffix::prelude::*;
 // Add `serde_json = "1.0"` to your [dependencies] or [dev-dependencies] in Cargo.toml.
 use serde_json;
 
-fn main() -> Result<(), serde_json::Error> {
+fn serde_example() -> Result<(), serde_json::Error> {
     let suffix = TypeIdSuffix::default();
 
     // Serialize
@@ -163,6 +162,7 @@ fn main() -> Result<(), serde_json::Error> {
     }
     Ok(())
 }
+# serde_example().unwrap();
 # }
 ```
 
@@ -170,8 +170,8 @@ fn main() -> Result<(), serde_json::Error> {
 
 - **Distributed Systems**: Generate globally unique, sortable identifiers for distributed systems.
 - **Database Systems**: Create compact, base32-encoded identifiers for database records.
-- **API Development**: Use `TypeId`suffixes as part of API responses or for resource identification.
-- **Time-based Sorting**: Leverage the sortable nature of `UUIDv7`-based `TypeId`suffixes for time-ordered data.
+- **API Development**: Use `TypeID` suffixes as part of API responses or for resource identification.
+- **Time-based Sorting**: Leverage the sortable nature of `UUIDv7`-based `TypeID` suffixes for time-ordered data.
 
 ## Safety and Correctness
 
@@ -185,7 +185,7 @@ These measures ensure that the crate behaves correctly and safely under various 
 
 ## Minimum Supported Rust Version (MSRV)
 
-This crate is guaranteed to compile on Rust 1.60.0 and later.
+No minimum Rust version is currently declared in the package manifest. Use the stable toolchain tested by the repository CI.
 
 ## License
 
@@ -202,8 +202,10 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## Credits
 
-This crate implements a portion of the [TypeID Specification](https://github.com/jetpack-io/typeid) created by Jetpack.io.## Sponsor
+This crate implements a portion of the [TypeID Specification](https://github.com/jetpack-io/typeid) created by Jetpack.io.
 
-Govcraft is a one-person shop—no corporate backing, no investors, just me building useful tools. If this project helps you, [sponsoring](https://github.com/sponsors/Govcraft) keeps the work going.
+## Sponsor
+
+Govcraft is a one-person shop, with no corporate backing or investors, just me building useful tools. If this project helps you, [sponsoring](https://github.com/sponsors/Govcraft) keeps the work going.
 
 [![Sponsor on GitHub](https://img.shields.io/badge/Sponsor-%E2%9D%A4-%23db61a2?logo=GitHub)](https://github.com/sponsors/Govcraft)

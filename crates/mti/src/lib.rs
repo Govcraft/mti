@@ -22,7 +22,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! mti = "1.0"
+//! mti = "1.1"
 //! ```
 //!
 //! Then, in your Rust code:
@@ -71,7 +71,7 @@
 //!
 //! ### 3. UUID Version Flexibility
 //!
-//! Support for UUID versions 1 through 7, defaulting to the time-sortable `UUIDv7`:
+//! Select UUID versions 1, 3, 4, 5, 6, or 7 explicitly (or `Nil` for an all-zero UUID):
 //!
 //! ```rust
 //! use mti::prelude::*;
@@ -143,32 +143,18 @@
 //! // process_user(order_id); // This would cause a compile-time error!
 //! ```
 //!
-//! ### Seamless Database Integration
+//! ### Storing IDs
 //!
-//! `MagicTypeId`s can be easily integrated with database libraries:
+//! Store the string representation and validate it when reading it back:
 //!
-//! ```rust,ignore
+//! ```rust
 //! use mti::prelude::*;
-//! use some_db_library::Database;
 //!
-//! #[derive(Debug)]
-//! struct User {
-//!     id: MagicTypeId,
-//!     name: String,
-//! }
-//!
-//! fn create_user(db: &Database, name: &str) -> User {
-//!     let user = User {
-//!         id: "user".magic_type_id::<V7>(),
-//!         name: name.to_string(),
-//!     };
-//!     db.insert("users", &user);
-//!     user
-//! }
-//!
-//! fn get_user(db: &Database, id: &MagicTypeId) -> Option<User> {
-//!     db.get("users", id)
-//! }
+//! let id = "user".create_type_id::<V7>();
+//! let stored = id.to_string();
+//! let restored = MagicTypeId::from_str(&stored)?;
+//! assert_eq!(restored, id);
+//! # Ok::<(), MagicTypeIdError>(())
 //! ```
 //!
 //! ## Performance and Safety
@@ -199,6 +185,11 @@
 //! at your option.
 //!
 //! Happy coding with Magic Type ID! 🎩✨
+
+// Compile the exact examples shipped in the crate README.
+#[cfg(doctest)]
+#[doc = include_str!("../README.md")]
+mod readme {}
 
 mod errors;
 mod magic_type_id;

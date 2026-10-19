@@ -8,13 +8,17 @@ use crate::ValidationError;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
-/// Represents a valid `TypeID` prefix as defined by the `TypeID` specification.
+/// Represents the prefix component of a `TypeID`.
 ///
-/// A `TypeIdPrefix` is guaranteed to:
+/// Parsing a `TypeIdPrefix` validates that it will:
 /// - Have a maximum length of 63 characters
 /// - Contain only lowercase ASCII letters and underscores
 /// - Not start or end with an underscore
 /// - Start and end with a lowercase letter
+///
+/// Parsing rejects empty strings. [`Default`] creates an empty prefix, and
+/// sanitization returns an empty prefix when no valid characters remain. The
+/// optional `arbitrary` feature generates values without validation.
 ///
 /// # Examples
 ///
@@ -137,6 +141,7 @@ impl PartialEq<TypeIdPrefix> for &str {
 /// This method will return a `ValidationError` if the input string does not meet
 /// the requirements of a valid `TypeID` prefix. Possible error conditions include:
 ///
+/// - The input is empty.
 /// - The input exceeds the maximum allowed length of 63 characters.
 /// - The input contains characters other than lowercase ASCII letters and underscores.
 /// - The input starts or ends with an underscore.

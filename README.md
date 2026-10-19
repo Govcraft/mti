@@ -2,19 +2,19 @@
 
 [![Crates.io](https://img.shields.io/crates/v/mti.svg)](https://crates.io/crates/mti)
 [![Documentation](https://docs.rs/mti/badge.svg)](https://docs.rs/mti)
-[![License: MIT OR Apache-2.0](https://img.shields.io/badge/License-MIT%20OR%20Apache--2.0-blue.svg)](LICENSE)
+[![License: MIT OR Apache-2.0](https://img.shields.io/badge/License-MIT%20OR%20Apache--2.0-blue.svg)](https://github.com/Govcraft/mti#license)
 
 Transform opaque UUIDs like `f47ac10b-58cc-4372-a567-0e02b2c3d479` into readable identifiers like `user_01h455vb4pex5vsknk084sn02q` that indicate type and remain globally unique.
 
 ## Overview
 
-UUIDs provide global uniqueness but obscure entity types. Debugging production issues requires determining whether `f47ac10b-58cc-4372-a567-0e02b2c3d479` represents a user, order, or payment—impossible without database queries or code searches. TypeIDs solve this by prefixing UUIDs with human-readable type information, transforming opaque identifiers into self-documenting ones like `user_01h455vb4pex5vsknk084sn02q` while maintaining global uniqueness and adding time-sortability through UUIDv7.
+UUIDs provide global uniqueness but obscure entity types. Debugging production issues requires determining whether `f47ac10b-58cc-4372-a567-0e02b2c3d479` represents a user, order, or payment, impossible without database queries or code searches. TypeIDs solve this by prefixing UUIDs with human-readable type information, transforming opaque identifiers into self-documenting ones like `user_01h455vb4pex5vsknk084sn02q` while maintaining global uniqueness and adding time-sortability through UUIDv7.
 
 This workspace provides three complementary Rust crates for working with TypeIDs:
 
 - **Start in two lines of code** with the high-level `mti` crate
 - **Production-ready**: implements [TypeID Specification v0.3.0](https://github.com/jetify-com/typeid), zero unsafe code, extensively tested
-- **Time-sortable by default**: UUIDv7 provides database-friendly chronological ordering
+- **Time-sortable with UUIDv7**: Select `V7` explicitly for chronological ordering by timestamp
 - **Modular architecture**: use the full API or just prefix validation or suffix encoding
 
 ## Crates
@@ -39,13 +39,15 @@ Create and parse TypeIDs:
 ```rust
 use mti::prelude::*;
 
-// Create a new TypeID (defaults to UUIDv7 - IDs sort chronologically)
-let user_id = "user".create_type_id();
+// Choose UUIDv7 explicitly for time-sortable IDs
+let user_id = "user".create_type_id::<V7>();
 println!("{}", user_id); // user_01h455vb4pex5vsknk084sn02q
 
 // Parse existing TypeIDs
 let order_id = MagicTypeId::from_str("order_01h455vb4pex5vsknk084sn02q")?;
-assert_eq!(order_id.prefix_str(), "order");
+assert_eq!(order_id.prefix().as_str(), "order");
+
+# Ok::<(), Box<dyn std::error::Error>>(())
 ```
 
 ## Why TypeIDs
@@ -56,7 +58,7 @@ TypeIDs address four common problems with traditional UUID-based identifiers:
 
 **Type Safety**: Accepting all identifiers as raw UUIDs or strings allows passing a `product_id` where a `user_id` is expected. These errors surface only at runtime. TypeIDs embed type information in the identifier, enabling runtime validation of prefix correctness. Combined with Rust newtypes wrapping `MagicTypeId`, you can prevent mixing different ID types (like `UserId` vs `OrderId`) at compile time.
 
-**Sortability**: Traditional UUIDv4 identifiers are random, causing poor database index locality and making chronological ordering impossible without separate timestamp columns. TypeIDs default to UUIDv7, which encodes creation time in the first 48 bits. Records sort naturally by insertion time, improving clustered index performance and simplifying time-based queries.
+**Sortability**: Traditional UUIDv4 identifiers are random, causing poor database index locality and making chronological ordering impossible without separate timestamp columns. UUIDv7 encodes creation time in the first 48 bits. Choosing `V7` groups IDs by timestamp when sorted, which can improve index locality. This does not guarantee insertion order across machines with different clocks.
 
 **Consistency**: Without a standard, teams invent ad-hoc schemes: prefixed strings, composite keys, or UUID columns with separate type fields. TypeIDs provide a specification-backed format that works across services, languages, and systems. The format `prefix_suffix` is simple, unambiguous, and increasingly adopted.
 
@@ -64,12 +66,12 @@ TypeIDs address four common problems with traditional UUID-based identifiers:
 
 The three crates compose cleanly:
 
-```
+```text
 ┌─────────────────────────────────────────────┐
 │             mti (High-Level API)            │
 │  ┌───────────────────────────────────────┐  │
 │  │         MagicTypeId                   │  │
-│  │  - create_type_id()                   │  │
+│  │  - create_type_id::<V7>()             │  │
 │  │  - parse from strings                 │  │
 │  │  - string-like operations             │  │
 │  └────────────┬──────────────┬───────────┘  │
@@ -93,17 +95,17 @@ This separation allows using `typeid-prefix` for input validation without UUID g
 
 ## Key Features
 
-**Specification Compliance**: Implements TypeID v0.3.0 from Jetify, ensuring format compatibility with other TypeID implementations across languages and platforms—your Rust services can exchange TypeIDs with TypeScript, Go, or Python services.
+**Specification Compliance**: Implements TypeID v0.3.0 from Jetify, ensuring format compatibility with other TypeID implementations across languages and platforms, your Rust services can exchange TypeIDs with TypeScript, Go, or Python services.
 
-**UUID Version Support**: Handles UUIDv1, v3, v4, v5, v6, v7, and Nil. Defaults to v7 for new identifiers, providing time-sortability and global uniqueness. Use v5 for deterministic IDs (same input always produces same ID) and v4 for simple random identifiers. Built-in `NamespaceId` with RFC 4122 constants (DNS, URL, OID, X500) makes creating deterministic IDs ergonomic—no need to add `uuid` as a direct dependency.
+**UUID Version Support**: Handles UUIDv1, v3, v4, v5, v6, v7, and Nil. Select the version explicitly with `create_type_id::<V7>()` or `create_type_id::<V4>()`. Use v5 for deterministic IDs (same input always produces same ID) and v4 for simple random identifiers. Built-in `NamespaceId` with RFC 4122 constants (DNS, URL, OID, X500) makes creating deterministic IDs ergonomic, no need to add `uuid` as a direct dependency.
 
-**Zero Unsafe Code**: All three crates forbid unsafe code via `#![deny(unsafe_code)]`, eliminating entire classes of memory safety vulnerabilities. Safety is guaranteed by the compiler, not runtime checks—critical for production systems handling sensitive identifiers.
+**Zero Unsafe Code**: All three crates inherit the workspace `unsafe_code = "deny"` lint. This applies to these crates, not to their dependencies.
 
 **Optional Serde Support**: Enable the `serde` feature to serialize and deserialize TypeIDs as JSON, YAML, TOML, or any format Serde supports. TypeIDs serialize as their string representation for human-readable output.
 
 **Optional Tracing**: Enable the `instrument` feature to emit trace events for creation, parsing, and validation, making production debugging easier when you need to understand ID generation patterns.
 
-**Comprehensive Testing**: Each crate includes unit tests, property-based tests with `proptest`, specification compliance tests, and fuzz testing. The test suites verify prefix rules, suffix encoding, roundtrip conversions, and edge cases.
+**Comprehensive Testing**: The workspace includes unit tests, property-based tests with `proptest`, specification test vectors, and fuzz targets for prefix and suffix handling. The test suites verify prefix rules, suffix encoding, roundtrip conversions, and edge cases.
 
 ## Usage Examples
 
@@ -113,7 +115,7 @@ This separation allows using `typeid-prefix` for input validation without UUID g
 use mti::prelude::*;
 
 // UUIDv7 (time-sortable, recommended for most use cases)
-let product_id = "product".create_type_id(); // v7 is default
+let product_id = "product".create_type_id::<V7>(); // Choose v7 explicitly
 println!("{}", product_id); // product_01h455vb4pex5vsknk084sn02q
 
 // UUIDv4 (random, no timestamp - use when creation time shouldn't be inferable)
@@ -130,6 +132,8 @@ let url_id = "page".create_type_id_v5(NamespaceId::URL, b"https://example.com/ab
 // Custom namespace from UUID string
 let custom_ns = NamespaceId::from_str("6ba7b810-9dad-11d1-80b4-00c04fd430c8")?;
 let resource_id = "resource".create_type_id_v5(custom_ns, b"unique_resource_name");
+
+# Ok::<(), Box<dyn std::error::Error>>(())
 ```
 
 ### Parsing and Extracting Components
@@ -140,12 +144,14 @@ use mti::prelude::*;
 let id_str = "order_01h455vb4pex5vsknk084sn02q";
 let order_id = MagicTypeId::from_str(id_str)?;
 
-assert_eq!(order_id.prefix_str(), "order");
-assert_eq!(order_id.suffix_str(), "01h455vb4pex5vsknk084sn02q");
+assert_eq!(order_id.prefix().as_str(), "order");
+assert_eq!(order_id.suffix().as_ref(), "01h455vb4pex5vsknk084sn02q");
 
 // Extract the underlying UUID
 let uuid = order_id.uuid()?;
 println!("UUID: {}", uuid);
+
+# Ok::<(), Box<dyn std::error::Error>>(())
 ```
 
 ### Building Type Safety with Newtypes
@@ -154,44 +160,90 @@ Wrap `MagicTypeId` in domain-specific types to prevent mixing different ID types
 
 ```rust
 use mti::prelude::*;
+use std::{error::Error, fmt};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct UserId(MagicTypeId);
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+enum UserIdError {
+    InvalidTypeId(MagicTypeIdError),
+    UnexpectedPrefix { actual: String },
+}
+
+impl fmt::Display for UserIdError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::InvalidTypeId(error) => write!(f, "Invalid TypeID: {error}"),
+            Self::UnexpectedPrefix { actual } => {
+                write!(f, "Expected '{}' prefix, got '{actual}'", UserId::PREFIX)
+            }
+        }
+    }
+}
+
+impl Error for UserIdError {
+    fn source(&self) -> Option<&(dyn Error + 'static)> {
+        match self {
+            Self::InvalidTypeId(error) => Some(error),
+            Self::UnexpectedPrefix { .. } => None,
+        }
+    }
+}
+
 impl UserId {
+    const PREFIX: &str = "user";
+
     fn new() -> Self {
-        Self("user".create_type_id())
+        Self(Self::PREFIX.create_type_id::<V7>())
     }
 
-    fn parse(s: &str) -> Result<Self, MagicTypeIdError> {
-        let id = MagicTypeId::from_str(s)?;
-        if id.prefix_str() != "user" {
-            return Err(MagicTypeIdError::Validation(
-                "Expected 'user' prefix".to_string()
-            ));
+    fn parse(s: &str) -> Result<Self, UserIdError> {
+        let id = MagicTypeId::from_str(s).map_err(UserIdError::InvalidTypeId)?;
+        if id.prefix().as_str() != Self::PREFIX {
+            return Err(UserIdError::UnexpectedPrefix {
+                actual: id.prefix().as_str().to_owned(),
+            });
         }
         Ok(Self(id))
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+let user_id = UserId::new();
+assert_eq!(UserId::parse(user_id.0.as_str()).unwrap(), user_id);
+assert!(matches!(
+    UserId::parse("order_01h455vb4pex5vsknk084sn02q"),
+    Err(UserIdError::UnexpectedPrefix { actual }) if actual == "order"
+));
+assert!(matches!(
+    UserId::parse("01h455vb4pex5vsknk084sn02q"),
+    Err(UserIdError::UnexpectedPrefix { actual }) if actual.is_empty()
+));
+assert!(matches!(
+    UserId::parse("user_invalid"),
+    Err(UserIdError::InvalidTypeId(_))
+));
+
+# Ok::<(), Box<dyn std::error::Error>>(())
+```
+
+`MagicTypeIdError` describes format errors. A valid `order` prefix is an
+application-level mismatch for `UserId`, so the wrapper uses its own error type.
+Keep the wrapped field private and validate every construction path, including
+any custom deserializer you add.
+
+Different wrapper types also prevent accidental mixing at compile time:
+
+```compile_fail,E0308
+use mti::prelude::*;
+
+struct UserId(MagicTypeId);
 struct OrderId(MagicTypeId);
 
-impl OrderId {
-    fn new() -> Self {
-        Self("order".create_type_id())
-    }
-}
+fn process_user(id: UserId) {}
 
-fn process_user(id: UserId) {
-    println!("Processing user: {}", id.0);
-}
-
-let user_id = UserId::new();
-let order_id = OrderId::new();
-
-process_user(user_id); // Compiles
-// process_user(order_id); // Compile error: expected `UserId`, found `OrderId`
+let order = OrderId("order".create_type_id::<V7>());
+process_user(order); // Expected UserId, found OrderId.
 ```
 
 ## When to Use Each Crate
@@ -215,24 +267,26 @@ cargo build --workspace
 Run tests:
 
 ```bash
-cargo nextest run --workspace
+cargo nextest run --workspace --all-features
+cargo test --workspace --doc --all-features
+python3 scripts/check-workspace-readme.py
 ```
 
 Check with clippy:
 
 ```bash
-cargo clippy --workspace --all-features
+cargo clippy --workspace --all-targets --all-features -- -D warnings
 ```
 
 Format code:
 
 ```bash
-cargo fmt --workspace
+cargo fmt --all
 ```
 
 ## Workspace Structure
 
-```
+```text
 mti/
 ├── Cargo.toml              # Workspace configuration
 ├── README.md               # This file

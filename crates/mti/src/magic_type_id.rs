@@ -51,11 +51,11 @@ use tracing::{debug, instrument, trace};
 /// ```
 /// # Sorting
 ///
-/// When `MagicTypeId` is created with a `V7` UUID, it provides a natural sorting order:
-/// 1. **Primary Sorting**: By the timestamp in the `UUIDv7` suffix. This means that identifiers
-///    generated later will appear after those generated earlier.
-/// 2. **Secondary Sorting**: If the timestamps are equal, then sorting is based on the lexicographical order
-///    of the prefix. This ensures consistent ordering even when identifiers are created at the same time.
+/// Ordering compares the entire UUID suffix first, then the prefix only when
+/// suffixes are identical. A V7 suffix starts with its millisecond timestamp;
+/// equal timestamps are ordered by the remaining UUID bits before the prefix.
+/// Clock differences between generators can affect chronological ordering.
+/// Sorting string representations instead compares the prefix first.
 ///
 /// ```rust
 /// use std::str::FromStr;

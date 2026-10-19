@@ -14,7 +14,7 @@
 //! - **Flexible Architecture**: Generic implementation allows for handling various UUID versions.
 //! - **Base32 Encoding/Decoding**: Efficient encoding and decoding of UUIDs to/from base32 `TypeID` suffixes.
 //! - **Error Handling**: Comprehensive error types for invalid suffixes and UUIDs.
-//! - **Validation**: Robust validation for `TypeID` suffixes and UUIDs.
+//! - **Validation**: Checks suffix length and encoding without restricting UUID versions or variants.
 //! - **Zero-cost Abstractions**: Designed to have minimal runtime overhead.
 //! - **Optional Tracing**: Integrates with the `tracing` crate for logging (optional feature).
 //!
@@ -24,7 +24,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! typeid_suffix = "1.3.0"
+//! typeid_suffix = "1.3"
 //! ```
 //!
 //! ## Usage Examples
@@ -72,7 +72,7 @@
 //! let suffix: TypeIdSuffix = uuid.into();
 //! println!("TypeID suffix: {}", suffix);
 //!
-//! let recovered_uuid: Uuid = suffix.try_into().expect("Valid UUID");
+//! let recovered_uuid: Uuid = suffix.into();
 //! assert_eq!(uuid, recovered_uuid);
 //! ```
 //!
@@ -98,7 +98,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! typeid_suffix = { version = "1.2.0", features = ["instrument", "serde"] }
+//! typeid_suffix = { version = "1.3", features = ["instrument", "serde"] }
 //! ```
 //!
 //! ### Serde Support
@@ -112,7 +112,7 @@
 //! ```rust
 //! # #[cfg(feature = "serde")] {
 //! // Enable the serde feature in your Cargo.toml:
-//! // typeid_suffix = { version = "1.2.0", features = ["serde"] }
+//! // typeid_suffix = { version = "1.3", features = ["serde"] }
 //!
 //! use typeid_suffix::prelude::*;
 //! // Note: serde_json is used here as an example and would be a separate dependency.
@@ -167,6 +167,10 @@ pub mod prelude {
     pub use crate::typeid_suffix::TypeIdSuffix;
     pub use crate::versions::*;
 }
+
+#[cfg(doctest)]
+#[doc = include_str!("../README.md")]
+mod readme {}
 
 #[cfg(test)]
 mod tests {
