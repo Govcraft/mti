@@ -18,6 +18,7 @@ arbitrary = ["dep:arbitrary"]
 serde = ["dep:serde"]
 
 [dependencies]
+smol_str = { workspace = true }
 arbitrary = { workspace = true, optional = true }
 tracing = { workspace = true, optional = true }
 serde = { workspace = true, optional = true }

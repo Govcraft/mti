@@ -5,6 +5,7 @@ use std::fmt::{Display, Formatter};
 use std::hash::{Hash, Hasher};
 use std::ops::Deref;
 use std::str::FromStr;
+use smol_str::{SmolStr, ToSmolStr, format_smolstr};
 use typeid_prefix::{TypeIdPrefix, ValidationError};
 use typeid_suffix::prelude::*;
 
@@ -81,7 +82,7 @@ use tracing::{debug, instrument, trace};
 pub struct MagicTypeId {
     prefix: TypeIdPrefix,
     suffix: TypeIdSuffix,
-    string_repr: String,
+    string_repr: SmolStr,
 }
 
 impl Ord for MagicTypeId {
@@ -115,13 +116,13 @@ impl PartialOrd<MagicTypeId> for str {
 // Implement PartialOrd for String
 impl PartialOrd<String> for MagicTypeId {
     fn partial_cmp(&self, other: &String) -> Option<Ordering> {
-        self.string_repr.partial_cmp(other)
+        self.string_repr.as_str().partial_cmp(other.as_str())
     }
 }
 
 impl PartialOrd<MagicTypeId> for String {
     fn partial_cmp(&self, other: &MagicTypeId) -> Option<Ordering> {
-        self.partial_cmp(&other.string_repr)
+        self.as_str().partial_cmp(other.string_repr.as_str())
     }
 }
 
@@ -178,11 +179,11 @@ impl MagicTypeId {
         let string_repr = if prefix.is_empty() {
             #[cfg(feature = "instrument")]
             trace!("Creating MagicTypeId with empty prefix");
-            suffix.to_string()
+            suffix.to_smolstr()
         } else {
             #[cfg(feature = "instrument")]
             trace!("Creating MagicTypeId with prefix and suffix");
-            format!("{prefix}_{suffix}")
+            format_smolstr!("{prefix}_{suffix}")
         };
         #[cfg(feature = "instrument")]
         debug!("Created MagicTypeId: {}", string_repr);
@@ -253,7 +254,7 @@ impl MagicTypeId {
     /// assert_eq!(type_id.as_str(), "user_01h455vb4pex5vsknk084sn02q");
     /// ```
     #[must_use]
-    pub const fn as_str(&self) -> &str {
+    pub fn as_str(&self) -> &str {
         self.string_repr.as_str()
     }
 }
